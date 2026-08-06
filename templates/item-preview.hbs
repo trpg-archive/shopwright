@@ -1,0 +1,45 @@
+{{#if error}}
+  <section class="sw-preview-error sw-empty">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{error}}</p>
+  </section>
+{{else}}
+<section class="sw-preview-shell" data-rarity="{{preview.rarityKey}}" {{#if preview.sourceUuid}}data-source-uuid="{{preview.sourceUuid}}"{{/if}}>
+  <header class="sw-preview-header">
+    <img src="{{preview.image}}" alt="{{preview.name}}">
+    <div class="sw-preview-heading">
+      <small>{{preview.shopName}}</small>
+      <h2>{{preview.name}}</h2>
+      {{#if hasMeta}}
+        <dl class="sw-preview-meta">
+          {{#each meta}}
+            <div><dt>{{label}}</dt><dd>{{value}}</dd></div>
+          {{/each}}
+        </dl>
+      {{/if}}
+    </div>
+  </header>
+
+  {{#if hasProperties}}
+    <div class="sw-preview-properties" aria-label="Свойства предмета">
+      {{#each preview.properties}}<span>{{this}}</span>{{/each}}
+    </div>
+  {{/if}}
+
+  <article class="sw-preview-description">
+    {{{preview.descriptionHtml}}}
+  </article>
+
+  <footer class="sw-preview-footer">
+    <div class="sw-preview-sale">
+      <span><small>Цена</small>{{#if preview.priceParts}}<span class="sw-coin"><b>{{preview.priceParts.amount}}</b><i class="sw-d-{{preview.priceParts.denom}}">{{preview.priceParts.label}}</i></span>{{else}}<strong>{{preview.priceText}}</strong>{{/if}}</span>
+      <span><small>В наличии</small><strong>{{preview.quantityText}}</strong></span>
+    </div>
+    {{#if canOpenOriginal}}
+      <button type="button" data-action="open-original">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть оригинал
+      </button>
+    {{/if}}
+  </footer>
+</section>
+{{/if}}

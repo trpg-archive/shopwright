@@ -1,0 +1,19 @@
+{
+  "SHOPWRIGHT.Title": "Менеджер магазинов",
+  "SHOPWRIGHT.Settings.Name": "Shopwright",
+  "SHOPWRIGHT.Settings.Label": "Открыть менеджер магазинов",
+  "SHOPWRIGHT.Settings.Hint": "Создание и редактирование магазинов, использующих UUID предметов из мира и компендиумов.",
+  "SHOPWRIGHT.Controls.Title": "Менеджер магазинов",
+  "SHOPWRIGHT.Notifications.GMOnly": "Изменять магазины может только мастер.",
+  "SHOPWRIGHT.Notifications.InvalidDrop": "Перетащите сюда предмет из мира или компендиума.",
+  "SHOPWRIGHT.Notifications.ItemMissing": "Предмет по этой UUID-ссылке не найден.",
+  "SHOPWRIGHT.Notifications.Saved": "Магазин сохранён.",
+  "SHOPWRIGHT.Notifications.Deleted": "Магазин удалён.",
+  "SHOPWRIGHT.Notifications.NoShops": "Магазинов пока нет.",
+  "SHOPWRIGHT.Theme.Name": "Тема оформления",
+  "SHOPWRIGHT.Theme.Hint": "Внешний вид окон Shopwright. «Система» повторяет тему интерфейса Foundry.",
+  "SHOPWRIGHT.Theme.System": "Система",
+  "SHOPWRIGHT.Theme.Dark": "Тёмная",
+  "SHOPWRIGHT.Theme.Light": "Пергамент",
+  "SHOPWRIGHT.Theme.Cool": "Холодная"
+}

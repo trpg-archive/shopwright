@@ -1,0 +1,2092 @@
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHOPWRIGHT — styles/shopwright.css
+   Полная замена прежнего файла.
+
+   ПРИНЦИПЫ
+   1. Всё живёт под .shopwright. Класс уже вешается модулем
+      через DEFAULT_OPTIONS.classes, поэтому чужие окна Foundry не заденет.
+      Токены НЕЛЬЗЯ объявлять в :root — перебьёте переменные других модулей.
+   2. Акцент существует в двух ролях: текст/рамка (--sw-brass) и заливка
+      (--sw-brass-fill + --sw-brass-fill-ink). На светлой теме это РАЗНЫЕ
+      цвета. Смешивать нельзя: латунь как текст на бумаге нечитаема.
+   3. Базовые компоненты (.sw-switch, .sw-coin, .sw-thumb) описываются селектором
+      из одного класса. Контекстные правила пишутся через :not() или отдельный
+      класс — иначе «класс + тег» перебивает базовый и ломает компонент.
+      Такие поломки уже случались: см. раздел ЛОВУШКИ в ДИЗАЙН-СИСТЕМА.md.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   0. ШРИФТЫ
+   Alegreya и IBM Plex загружаются из Google Fonts. При недоступной сети
+   используются Signika и системные fallback-шрифты; раскладка сохраняется.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   1. ТОКЕНЫ — ТЁМНАЯ ТЕМА (база)
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright{
+  /* поверхности: карточка СВЕТЛЕЕ панели, панель светлее окна */
+  --sw-bg-win:#16181e;
+  --sw-bg-panel:#1b1e25;
+  --sw-bg-row:#20242c;
+  --sw-bg-row-hov:#272c36;
+  --sw-bg-sunk:#0e1014;
+  --sw-bg-band:#171a20;
+  --sw-bg-tint:#14171d;
+  --sw-bg-btn:#1e222a;
+  --sw-bg-btn-hov:#262b35;
+  --sw-bg-badge:#2a303a;
+  --sw-thumb-bg:#0c0e12;
+
+  --sw-line:#2c313b;
+  --sw-line-soft:#242932;
+  --sw-line-hard:#3a4150;
+
+  --sw-ink:#dfe3ea;
+  --sw-ink-2:#98a0b0;
+  --sw-ink-3:#6b7382;
+
+  --sw-brass:#d3a444;
+  --sw-brass-dim:#8d6e2c;
+  --sw-brass-fill:#d3a444;
+  --sw-brass-fill-ink:#191204;
+  --sw-patina:#5f9b7d;
+  --sw-patina-dim:#3d6552;
+  --sw-patina-fill:#3d6552;
+  --sw-patina-fill-ink:#eafff4;
+  --sw-rust:#b4543f;
+  --sw-rust-soft:#d9a196;
+
+  --sw-switch-off:#2c313b;
+  --sw-switch-knob:#f3e3bd;
+  --sw-track:#0e1014;
+  --sw-shadow:0 18px 50px rgba(0,0,0,.6);
+  --sw-tint-brass:rgba(211,164,68,.09);
+  --sw-tint-patina:rgba(95,155,125,.08);
+  --sw-tint-rust:rgba(180,84,63,.09);
+  --sw-rust-edge:rgba(180,84,63,.5);
+  --sw-focus:rgba(211,164,68,.14);
+  --sw-field-inset:none;
+
+  /* монеты dnd5e: пм / зм / эм / см / мм */
+  --sw-m-pp:#cfd8e6;
+  --sw-m-gp:#e2b344;
+  --sw-m-ep:#c9b98a;
+  --sw-m-sp:#a5aeba;
+  --sw-m-cp:#c0784a;
+
+  /* редкость: ключи совпадают с system.rarity.value */
+  --sw-r-common:#7d8593;
+  --sw-r-uncommon:#4f9e63;
+  --sw-r-rare:#4b82cf;
+  --sw-r-veryRare:#9560c9;
+  --sw-r-legendary:#d99a2b;
+  --sw-r-artifact:#c0532b;
+
+  --sw-f-display:"KS Display","Alegreya","Signika",Georgia,serif;
+  --sw-f-ui:"KS Sans","IBM Plex Sans","Signika",system-ui,sans-serif;
+  --sw-f-num:"KS Mono","IBM Plex Mono",ui-monospace,monospace;
+
+  --sw-row-h:38px;
+  --sw-r:4px;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   2. ТОКЕНЫ — СВЕТЛАЯ ТЕМА (пергамент)
+
+   Класс sw-theme-* вешает ThemeService на корень каждого окна модуля.
+   В режиме «Система» он повторяет тему самого Foundry, в остальных —
+   задаёт её принудительно. На <body> модуль ничего не пишет.
+
+   Это НЕ инверсия тёмной темы: здесь панели ТЕМНЕЕ страницы, а карточки
+   СВЕТЛЕЕ. Если сделать простую инверсию, все три уровня сольются.
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright.sw-theme-light{
+  --sw-bg-win:#f7f1e1;
+  --sw-bg-panel:#ebdfc4;
+  --sw-bg-row:#fffcf3;
+  --sw-bg-row-hov:#f3ead4;
+  --sw-bg-sunk:#fffdf7;
+  --sw-bg-band:#e4d6b6;
+  --sw-bg-tint:#f1e8d2;
+  --sw-bg-btn:#fffcf3;
+  --sw-bg-btn-hov:#f0e6cd;
+  --sw-bg-badge:#dccdaa;
+  --sw-thumb-bg:#f4ecd8;
+
+  --sw-line:#cdb98d;
+  --sw-line-soft:#e0d2ae;
+  --sw-line-hard:#ab9668;
+
+  --sw-ink:#2a2318;
+  --sw-ink-2:#6b5c43;
+  --sw-ink-3:#8f7f63;
+
+  /* латунь уведена в бронзу: бумага сама золотистая */
+  --sw-brass:#8a5410;
+  --sw-brass-dim:#a5751d;
+  --sw-brass-fill:#c9901e;
+  --sw-brass-fill-ink:#2a1c02;
+  --sw-patina:#2e6b52;
+  --sw-patina-dim:#4a8168;
+  --sw-patina-fill:#2f7a58;
+  --sw-patina-fill-ink:#f6fffa;
+  --sw-rust:#9c3a20;
+  --sw-rust-soft:#83301a;
+
+  --sw-switch-off:#cbbb97;
+  --sw-switch-knob:#fffdf3;
+  --sw-track:#d8c8a2;
+  --sw-shadow:0 14px 36px rgba(74,58,30,.24);
+  --sw-tint-brass:rgba(138,84,16,.11);
+  --sw-tint-patina:rgba(46,107,82,.1);
+  --sw-tint-rust:rgba(156,58,32,.09);
+  --sw-rust-edge:rgba(156,58,32,.42);
+  --sw-focus:rgba(138,84,16,.2);
+  --sw-field-inset:inset 0 1px 2px rgba(60,46,20,.07);
+
+  /* платина и серебро — в холодную сталь, иначе на тёплой бумаге
+     все пять номиналов сливаются в один оттенок */
+  --sw-m-pp:#55677a;
+  --sw-m-gp:#8f6208;
+  --sw-m-ep:#7a6220;
+  --sw-m-sp:#626e7a;
+  --sw-m-cp:#95431b;
+
+  --sw-r-common:#6f6553;
+  --sw-r-uncommon:#2c7a3f;
+  --sw-r-rare:#26558f;
+  --sw-r-veryRare:#6a3595;
+  --sw-r-legendary:#9a6208;
+  --sw-r-artifact:#8c3213;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   2b. ТОКЕНЫ — ХОЛОДНАЯ СВЕТЛАЯ ТЕМА
+   Альтернатива пергаменту для тех, кому нужен нейтральный светлый фон.
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright.sw-theme-cool{
+  --sw-bg-win:#f6f7f9;
+  --sw-bg-panel:#e4e7ed;
+  --sw-bg-row:#ffffff;
+  --sw-bg-row-hov:#eef0f5;
+  --sw-bg-sunk:#ffffff;
+  --sw-bg-band:#e0e4ea;
+  --sw-bg-tint:#eef0f4;
+  --sw-bg-btn:#ffffff;
+  --sw-bg-btn-hov:#eaedf2;
+  --sw-bg-badge:#d7dce4;
+  --sw-thumb-bg:#f0f2f6;
+
+  --sw-line:#c8cdd7;
+  --sw-line-soft:#e0e4ea;
+  --sw-line-hard:#a4acba;
+
+  --sw-ink:#1c202a;
+  --sw-ink-2:#4d5565;
+  --sw-ink-3:#79808f;
+
+  --sw-brass:#8a6512;
+  --sw-brass-dim:#a07a1e;
+  --sw-brass-fill:#d7a83f;
+  --sw-brass-fill-ink:#241a03;
+  --sw-patina:#2f6b4f;
+  --sw-patina-dim:#4b8468;
+  --sw-patina-fill:#2f7a58;
+  --sw-patina-fill-ink:#f4fff9;
+  --sw-rust:#a33c28;
+  --sw-rust-soft:#8c3520;
+
+  --sw-switch-off:#bcc3ce;
+  --sw-switch-knob:#fffdf6;
+  --sw-track:#d5d9e1;
+  --sw-shadow:0 12px 34px rgba(30,38,55,.2);
+  --sw-tint-brass:rgba(138,101,18,.1);
+  --sw-tint-patina:rgba(47,107,79,.09);
+  --sw-tint-rust:rgba(163,60,40,.08);
+  --sw-rust-edge:rgba(163,60,40,.45);
+  --sw-focus:rgba(138,101,18,.18);
+  --sw-field-inset:inset 0 1px 2px rgba(28,32,42,.06);
+
+  --sw-m-pp:#5f6b7d;
+  --sw-m-gp:#9a7210;
+  --sw-m-ep:#7d6f34;
+  --sw-m-sp:#69727f;
+  --sw-m-cp:#8e4d26;
+
+  --sw-r-common:#767d8a;
+  --sw-r-uncommon:#2f7d43;
+  --sw-r-rare:#2a5fa8;
+  --sw-r-veryRare:#6f3fa0;
+  --sw-r-legendary:#a06a10;
+  --sw-r-artifact:#93381a;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   3. КАРКАС ОКНА
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright .window-content{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  overflow:hidden;
+  padding:0;
+  background:var(--sw-bg-win);
+  color:var(--sw-ink);
+  font-family:var(--sw-f-ui);
+  font-size:13px;
+}
+.shopwright .sw-shell,
+.shopwright .sw-store-shell,
+.shopwright .sw-editor-form,
+.shopwright .sw-preview-shell,
+.shopwright .sw-buyer-picker-shell,
+.shopwright .sw-trade-settings-form{
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+}
+.shopwright *{box-sizing:border-box}
+.shopwright ::-webkit-scrollbar{width:10px;height:10px}
+.shopwright ::-webkit-scrollbar-track{background:var(--sw-bg-sunk)}
+.shopwright ::-webkit-scrollbar-thumb{
+  background:var(--sw-line-hard);border-radius:10px;
+  border:3px solid var(--sw-bg-sunk);
+}
+@media (prefers-reduced-motion:reduce){
+  .shopwright *{transition:none !important}
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   4. ТИПОГРАФИКА
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright h2{font:700 20px/1.1 var(--sw-f-display);margin:0;color:var(--sw-ink);border:none}
+.shopwright h3{font:700 15px/1.2 var(--sw-f-display);margin:0;color:var(--sw-ink);border:none}
+.shopwright p{margin:0}
+.shopwright kbd{
+  font-family:var(--sw-f-num);font-size:10.5px;
+  border:1px solid var(--sw-line-hard);border-radius:3px;
+  padding:1px 4px;background:var(--sw-bg-sunk);
+}
+.shopwright .sw-mono{font-family:var(--sw-f-num);font-variant-numeric:tabular-nums}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   5. КНОПКИ
+   ─────────────────────────────────────────────────────────────────────────── */
+/* Кнопки заголовка окна (крестик, скрутка) несут глиф Font Awesome на себе,
+   поэтому базовое правило обязано их не касаться.
+   Исключение обёрнуто в :where() — он не добавляет специфичности, иначе
+   правило перебьёт все компонентные стили кнопок (.sw-buy-button и прочие). */
+.shopwright button:where(:not(.header-control)){
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:28px;padding:0 11px;
+  border-radius:var(--sw-r);
+  border:1px solid var(--sw-line-hard);
+  background:var(--sw-bg-btn);
+  color:var(--sw-ink-2);
+  font-family:var(--sw-f-ui);font-size:12px;line-height:1;
+  white-space:nowrap;cursor:pointer;
+  transition:background .12s,color .12s,border-color .12s;
+}
+.shopwright button:where(:not(.header-control)):hover{
+  background:var(--sw-bg-btn-hov);color:var(--sw-ink);border-color:var(--sw-line-hard);
+  box-shadow:none;
+}
+.shopwright button:where(:not(.header-control)):focus-visible{
+  outline:none;box-shadow:0 0 0 2px var(--sw-focus);
+}
+.shopwright button:where(:not(.header-control)):disabled{opacity:.5;cursor:not-allowed}
+.shopwright button:where(:not(.header-control)):disabled:hover{
+  background:var(--sw-bg-btn);color:var(--sw-ink-2);
+}
+.shopwright button.danger{color:var(--sw-rust)}
+.shopwright button.danger:hover{
+  background:var(--sw-rust);border-color:var(--sw-rust);color:#fff;
+}
+
+/* главное действие окна — в подвале формы и в шапке менеджера */
+.shopwright .sw-form-footer button,
+.shopwright .sw-toolbar button:not(.danger),
+.shopwright .sw-groups-actions button:last-child,
+.shopwright .sw-batch-apply{
+  background:var(--sw-brass-fill);
+  border-color:var(--sw-brass-fill);
+  color:var(--sw-brass-fill-ink);
+  font-weight:600;
+}
+.shopwright .sw-form-footer button:hover,
+.shopwright .sw-toolbar button:not(.danger):hover,
+.shopwright .sw-groups-actions button:last-child:hover,
+.shopwright .sw-batch-apply:hover{
+  filter:brightness(1.08);
+  background:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);
+}
+
+/* кнопки-иконки: строки магазинов, истории, категорий */
+.shopwright .sw-row-actions button,
+.shopwright .sw-history-actions button,
+.shopwright .sw-category-row > button:not(.sw-category-filter),
+.shopwright .sw-category-create button,
+.shopwright .sw-file-field button,
+.shopwright .sw-editor-item > button.danger,
+.shopwright .sw-product-group-card button.danger{
+  width:26px;height:26px;padding:0;flex:none;
+  border-color:transparent;background:none;
+  color:var(--sw-ink-3);font-size:12px;
+}
+.shopwright .sw-row-actions button:hover,
+.shopwright .sw-history-actions button:hover,
+.shopwright .sw-category-row > button:not(.sw-category-filter):hover,
+.shopwright .sw-file-field button:hover{
+  background:var(--sw-bg-btn-hov);color:var(--sw-ink);border-color:var(--sw-line-hard);
+}
+.shopwright .sw-bind-token.is-linked{
+  color:var(--sw-brass);border-color:var(--sw-brass-dim);background:var(--sw-tint-brass);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   6. ПОЛЯ ВВОДА
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright input[type=text],
+.shopwright input[type=number],
+.shopwright input[type=search],
+.shopwright select,
+.shopwright textarea{
+  width:100%;height:28px;padding:0 9px;
+  border-radius:var(--sw-r);
+  background:var(--sw-bg-sunk);
+  border:1px solid var(--sw-line);
+  color:var(--sw-ink);
+  font-family:var(--sw-f-ui);font-size:13px;line-height:1;
+  outline:none;vertical-align:middle;
+  box-shadow:var(--sw-field-inset);
+}
+.shopwright textarea{
+  height:auto;min-height:62px;padding:8px 9px;
+  line-height:1.5;resize:vertical;
+}
+.shopwright input[type=number]{
+  font-family:var(--sw-f-num);font-variant-numeric:tabular-nums;text-align:center;
+}
+.shopwright input:focus,
+.shopwright select:focus,
+.shopwright textarea:focus{
+  border-color:var(--sw-brass-dim);
+  box-shadow:0 0 0 2px var(--sw-focus);
+}
+.shopwright input::placeholder,
+.shopwright textarea::placeholder{color:var(--sw-ink-3)}
+.shopwright select{
+  appearance:none;padding-right:26px;
+  background-image:
+    linear-gradient(45deg,transparent 50%,var(--sw-ink-3) 50%),
+    linear-gradient(135deg,var(--sw-ink-3) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 12px,calc(100% - 10px) 12px;
+  background-size:5px 5px,5px 5px;
+  background-repeat:no-repeat;
+}
+
+/* подпись над полем */
+.shopwright label > span:first-child{
+  display:block;
+  font:500 10px/1 var(--sw-f-ui);
+  letter-spacing:.11em;text-transform:uppercase;
+  color:var(--sw-ink-3);
+  margin-bottom:5px;
+}
+
+/* поиск */
+.shopwright .sw-shop-tools label,
+.shopwright .sw-history-tools label,
+.shopwright .sw-store-tools label,
+.shopwright .sw-buyer-picker-head label{
+  position:relative;display:block;flex:1;margin:0;
+}
+/* Значок поиска позиционируется от края МЕТКИ, а не поля. Там, где у
+   метки есть собственный внутренний отступ, его нужно прибавить. */
+.shopwright .sw-store-tools label > i,
+.shopwright .sw-buyer-picker-head label > i{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  color:var(--sw-ink-3);font-size:12px;pointer-events:none;
+}
+.shopwright .sw-shop-tools > label > i,
+.shopwright .sw-history-tools > label > i{
+  position:absolute;left:22px;top:50%;transform:translateY(-50%);
+  color:var(--sw-ink-3);font-size:12px;pointer-events:none;
+}
+.shopwright .sw-shop-tools input[type=search],
+.shopwright .sw-history-tools input[type=search],
+.shopwright .sw-store-tools input[type=search],
+.shopwright .sw-buyer-picker-head input[type=search]{
+  padding-left:30px;height:30px;
+}
+
+/* поле с кнопкой выбора файла */
+.shopwright .sw-file-field{display:flex;gap:6px}
+.shopwright .sw-file-field input{
+  font-family:var(--sw-f-num);font-size:11px;color:var(--sw-ink-2);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   7. ПЕРЕКЛЮЧАТЕЛЬ (checkbox → тумблер)
+   Габариты продублированы через min/max: одного width мало, в чужом
+   flex-контейнере он перебивается любым flex:1. flex-basis НЕ используем —
+   в колоночном контейнере он управляет высотой и делает тумблер квадратом.
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright input[type=checkbox]{
+  appearance:none !important;-webkit-appearance:none;
+  background-image:none;
+  width:34px;min-width:34px;max-width:34px;
+  height:18px;min-height:18px;max-height:18px;
+  flex:none;margin:0;
+  border-radius:9px;
+  background:var(--sw-switch-off);
+  border:1px solid var(--sw-line-hard);
+  position:relative;cursor:pointer;
+  transition:background .15s,border-color .15s;
+  box-shadow:none;
+}
+/* Foundry рисует галочку своим ::before — он тут лишний, знак состояния
+   несёт положение кружка. */
+.shopwright input[type=checkbox]::before{content:none;display:none}
+.shopwright input[type=checkbox]::after{
+  content:"";position:absolute;top:2px;left:2px;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--sw-ink-3);
+  transition:left .15s,background .15s;
+}
+.shopwright input[type=checkbox]:checked{
+  background:var(--sw-brass-fill);border-color:var(--sw-brass-fill);
+}
+.shopwright input[type=checkbox]:checked::after{
+  left:18px;background:var(--sw-switch-knob);
+}
+.shopwright input[type=checkbox]:focus-visible{
+  outline:none;box-shadow:0 0 0 2px var(--sw-focus);
+}
+
+/* кнопка выделения товара для массовых действий — это НЕ тумблер */
+.shopwright .sw-item-select{
+  width:16px;min-width:16px;max-width:16px;height:16px;
+  flex:none;padding:0;
+  border:1px solid var(--sw-line-hard);border-radius:3px;
+  background:var(--sw-bg-sunk);
+  color:transparent;font-size:9px;
+}
+.shopwright .sw-item-select[aria-pressed="true"]{
+  background:var(--sw-brass-fill);
+  border-color:var(--sw-brass-fill);
+  color:var(--sw-brass-fill-ink);
+  font-weight:700;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   8. ВКЛАДКИ
+   flex-wrap, а НЕ overflow-x:auto — из-за margin-bottom:-1px у кнопок
+   браузер рисовал полосу прокрутки даже когда вкладки помещаются.
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright .sw-manager-tabs,
+.shopwright .sw-shop-tabs{
+  display:flex;flex-wrap:wrap;
+  padding:0 14px;
+  background:var(--sw-bg-panel);
+  border-bottom:1px solid var(--sw-line);
+  flex:none;
+}
+.shopwright .sw-manager-tabs button,
+.shopwright .sw-shop-tabs button{
+  height:auto;padding:9px 14px;
+  background:none;border:none;
+  border-bottom:2px solid transparent;
+  margin-bottom:-1px;border-radius:0;
+  color:var(--sw-ink-3);font-size:12.5px;
+}
+.shopwright .sw-manager-tabs button:hover,
+.shopwright .sw-shop-tabs button:hover{
+  background:none;color:var(--sw-ink-2);
+}
+.shopwright .sw-manager-tabs button.is-active,
+.shopwright .sw-shop-tabs button.is-active{
+  color:var(--sw-ink);border-bottom-color:var(--sw-brass);background:none;
+}
+.shopwright .sw-manager-tabs button > span,
+.shopwright .sw-shop-tabs button > span{
+  font:500 10px/16px var(--sw-f-num);
+  min-width:16px;padding:0 4px;text-align:center;
+  border-radius:3px;
+  background:var(--sw-bg-badge);color:var(--sw-ink-2);
+}
+.shopwright .sw-manager-tabs button.is-active > span,
+.shopwright .sw-shop-tabs button.is-active > span{
+  background:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   9. ОБЩИЕ ЭЛЕМЕНТЫ
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* шапка окна */
+.shopwright .sw-toolbar{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;flex:none;
+  background:var(--sw-bg-panel);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-toolbar > div:first-child{flex:1;min-width:0}
+.shopwright .sw-toolbar h2 > i{color:var(--sw-brass);font-size:16px;margin-right:6px}
+.shopwright .sw-toolbar p{
+  font:400 10px/1 var(--sw-f-num);
+  letter-spacing:.06em;color:var(--sw-ink-3);margin-top:4px;
+}
+
+/* подвал */
+.shopwright .sw-footer-note{
+  padding:8px 12px;flex:none;
+  border-top:1px solid var(--sw-line);
+  background:var(--sw-bg-panel);
+  font-size:11px;color:var(--sw-ink-3);text-align:center;
+}
+.shopwright .sw-form-footer{
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;
+  padding:9px 12px;flex:none;
+  border-top:1px solid var(--sw-line);
+  background:var(--sw-bg-panel);
+}
+
+/* пустые состояния */
+.shopwright .sw-empty{
+  padding:34px 20px;text-align:center;color:var(--sw-ink-3);
+}
+.shopwright .sw-empty > i{
+  display:block;font-size:26px;margin-bottom:9px;opacity:.5;
+}
+.shopwright .sw-empty p{
+  font-size:12.5px;line-height:1.5;max-width:380px;margin:0 auto;
+}
+.shopwright .sw-empty.compact{padding:18px}
+
+/* чипы */
+.shopwright .sw-chip,
+.shopwright .sw-group-meta span,
+.shopwright .sw-product-group-heading small{
+  display:inline-flex;align-items:center;gap:4px;
+  font:500 10px/1 var(--sw-f-num);letter-spacing:.03em;
+  color:var(--sw-ink-3);
+  border:1px solid var(--sw-line);border-radius:3px;
+  padding:3px 5px;white-space:nowrap;
+}
+.shopwright .sw-group-meta .is-due{
+  color:var(--sw-rust);border-color:var(--sw-rust-edge);
+}
+
+/* информационные полосы */
+.shopwright .sw-groups-note,
+.shopwright .sw-wallet-hint,
+.shopwright .sw-sales-note{
+  display:flex;gap:8px;align-items:flex-start;
+  padding:9px 12px;
+  font-size:11.5px;line-height:1.5;color:var(--sw-ink-3);
+  border-top:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-groups-note{
+  border-top:none;border-bottom:1px solid var(--sw-line-soft);
+}
+
+/* миниатюра */
+.shopwright .sw-shop-row > img,
+.shopwright .sw-history-row > img,
+.shopwright .sw-product > img,
+.shopwright .sw-editor-item > img,
+.shopwright .sw-buyer-row > img{
+  width:28px;height:28px;flex:none;
+  border-radius:3px;object-fit:cover;
+  border:1px solid var(--sw-line-hard);
+  background:var(--sw-thumb-bg);
+}
+.shopwright .sw-shop-row > img,
+.shopwright .sw-history-row > img,
+.shopwright .sw-buyer-row > img{width:34px;height:34px}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   10. ДЕНЬГИ — сигнатурный элемент
+   Требует изменения в JS: см. ДИЗАЙН-СИСТЕМА.md, раздел «Правки в коде».
+   Пока разметка не поменялась, работает запасной вариант .sw-price.
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright .sw-coin{
+  font-family:var(--sw-f-num);font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.shopwright .sw-coin b{
+  font-weight:600;font-size:13.5px;color:var(--sw-ink);
+  /* toLocaleString('ru') ставит неразрывный пробел; в моноширинном он
+     в целую ширину знака и разрывает число надвое — поджимаем */
+  word-spacing:-.22em;
+}
+.shopwright .sw-coin i{
+  font-style:normal;font-size:10px;margin-left:3px;letter-spacing:.04em;
+}
+.shopwright .sw-d-pp{color:var(--sw-m-pp)}
+.shopwright .sw-d-gp{color:var(--sw-m-gp)}
+.shopwright .sw-d-ep{color:var(--sw-m-ep)}
+.shopwright .sw-d-sp{color:var(--sw-m-sp)}
+.shopwright .sw-d-cp{color:var(--sw-m-cp)}
+
+/* монетный ряд (кошелёк) */
+.shopwright .sw-purse{
+  display:flex;gap:5px 14px;align-items:baseline;flex-wrap:wrap;
+}
+.shopwright .sw-purse .sw-coin b{font-size:12.5px}
+
+/* запасной вариант, пока цена приходит одной строкой */
+.shopwright .sw-product-price strong,
+.shopwright .sw-preview-sale strong,
+.shopwright .sw-history-money > strong{
+  font-family:var(--sw-f-num);font-variant-numeric:tabular-nums;
+  font-weight:600;font-size:13.5px;color:var(--sw-ink);
+  word-spacing:-.22em;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────────────
+   11. ПОЛОСА РЕДКОСТИ
+   Требует data-rarity на строке: см. «Правки в коде».
+   ─────────────────────────────────────────────────────────────────────────── */
+.shopwright .sw-product[data-rarity],
+.shopwright .sw-editor-item[data-rarity],
+.shopwright .sw-preview-shell[data-rarity]{position:relative}
+.shopwright .sw-product[data-rarity]::before,
+.shopwright .sw-editor-item[data-rarity]::before,
+.shopwright .sw-preview-shell[data-rarity]::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--sw-rarity,transparent);
+  pointer-events:none;z-index:1;
+}
+/* цвет задаётся переменной на самом элементе: так он не конкурирует
+   по специфичности с правилом, которое рисует полосу */
+.shopwright [data-rarity="uncommon"]{--sw-rarity:var(--sw-r-uncommon)}
+.shopwright [data-rarity="rare"]{--sw-rarity:var(--sw-r-rare)}
+.shopwright [data-rarity="veryRare"]{--sw-rarity:var(--sw-r-veryRare)}
+.shopwright [data-rarity="legendary"]{--sw-rarity:var(--sw-r-legendary)}
+.shopwright [data-rarity="artifact"]{--sw-rarity:var(--sw-r-artifact)}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   12. МЕНЕДЖЕР МАГАЗИНОВ
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-manager-workspace{
+  display:grid;grid-template-columns:196px minmax(0,1fr);
+  flex:1;min-height:0;min-width:0;overflow:hidden;
+}
+
+/* сайдбар категорий */
+.shopwright .sw-category-panel{
+  display:flex;flex-direction:column;min-height:0;
+  background:var(--sw-bg-panel);
+  border-right:1px solid var(--sw-line);
+}
+.shopwright .sw-category-heading{padding:10px 12px 6px}
+.shopwright .sw-category-heading strong{
+  display:block;font:500 10px/1 var(--sw-f-ui);
+  letter-spacing:.13em;text-transform:uppercase;color:var(--sw-ink-3);
+}
+.shopwright .sw-category-heading small{display:none}
+.shopwright .sw-category-list{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable}
+.shopwright .sw-category-row{display:flex;align-items:center}
+.shopwright .sw-category-filter{
+  flex:1;min-width:0;justify-content:flex-start;gap:8px;
+  height:auto;padding:6px 10px 6px 12px;
+  background:none;border:none;border-radius:0;
+  border-left:2px solid transparent;
+  color:var(--sw-ink-2);font-size:12.5px;text-align:left;
+}
+.shopwright .sw-category-filter:hover{
+  background:var(--sw-bg-row);color:var(--sw-ink);
+}
+.shopwright .sw-category-filter.is-active{
+  background:var(--sw-bg-row);color:var(--sw-ink);
+  border-left-color:var(--sw-brass);
+}
+.shopwright .sw-category-filter > span{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.shopwright .sw-category-filter em{
+  font:400 11px/1 var(--sw-f-num);font-style:normal;color:var(--sw-ink-3);
+}
+.shopwright .sw-category-row > button:not(.sw-category-filter){
+  width:20px;height:20px;font-size:10px;opacity:0;transition:opacity .12s;
+}
+.shopwright .sw-category-row:hover > button:not(.sw-category-filter){opacity:1}
+.shopwright .sw-category-create{
+  display:flex;gap:6px;flex:none;
+  padding:10px;border-top:1px solid var(--sw-line);
+}
+.shopwright .sw-category-create button{width:28px;flex:none}
+
+/* правая колонка */
+.shopwright .sw-shop-panel{
+  display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;
+}
+.shopwright .sw-shop-tools,
+.shopwright .sw-history-tools{
+  display:flex;flex-direction:column;flex:none;
+}
+.shopwright .sw-shop-tools > label,
+.shopwright .sw-history-tools > label{
+  padding:10px 12px;border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-shop-tools > label input,
+.shopwright .sw-history-tools > label input{width:100%}
+
+/* полоса выбранного токена — четыре состояния */
+.shopwright .sw-selected-token{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  font-size:11.5px;color:var(--sw-ink-2);
+  background:var(--sw-bg-tint);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-selected-token > i{color:var(--sw-brass-dim);font-size:12px}
+.shopwright .sw-selected-token strong{color:var(--sw-ink);font-weight:500}
+.shopwright .sw-selected-token em{
+  font-style:normal;margin-left:auto;
+  font-size:11px;color:var(--sw-ink-3);white-space:nowrap;
+}
+.shopwright .sw-selected-token em:not(.danger-text) i{color:var(--sw-brass)}
+.shopwright .sw-selected-token .danger-text{color:var(--sw-rust)}
+.shopwright .sw-selected-token.is-empty,
+.shopwright .sw-selected-token.is-empty > i{color:var(--sw-ink-3)}
+
+/* строка магазина */
+.shopwright .sw-shop-list,
+.shopwright .sw-history-list{
+  flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;
+}
+/* Вкладки менеджера имеют разную DOM-структуру. История не обёрнута в
+   sw-manager-workspace, поэтому её список всегда является единственной
+   растягиваемой и прокручиваемой областью между поиском и подвалом. */
+.shopwright .sw-manager-shell.is-history .sw-history-tools{flex:0 0 auto}
+.shopwright .sw-manager-shell.is-history .sw-history-list{
+  flex:1 1 auto;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;
+}
+.shopwright .sw-shop-row{
+  display:flex;align-items:center;gap:10px;
+  min-height:var(--sw-row-h);
+  padding:6px 12px 6px 9px;
+  border-bottom:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-shop-row:hover{background:var(--sw-bg-row-hov)}
+.shopwright .sw-shop-summary{flex:1;min-width:0}
+.shopwright .sw-shop-summary h3{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-shop-summary p{
+  font-size:11.5px;color:var(--sw-ink-2);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-shop-summary small{
+  display:inline-flex;align-items:center;gap:4px;margin-top:4px;
+  font:500 10px/1 var(--sw-f-num);letter-spacing:.03em;
+  color:var(--sw-ink-3);
+  border:1px solid var(--sw-line);border-radius:3px;padding:3px 5px;
+}
+.shopwright .sw-shop-category-select{
+  display:inline-flex;align-items:center;gap:6px;margin-top:4px;margin-left:6px;
+}
+.shopwright .sw-shop-category-select > i{color:var(--sw-ink-3);font-size:11px}
+.shopwright .sw-shop-category-select select{
+  width:132px;height:24px;font-size:12px;
+  background-position:calc(100% - 14px) 10px,calc(100% - 9px) 10px;
+}
+.shopwright .sw-row-actions{display:flex;gap:2px;flex:none}
+/* привязка к токену и открытие витрины видны всегда,
+   остальное проявляется по наведению */
+.shopwright .sw-row-actions button:nth-child(n+3){
+  opacity:0;transition:opacity .12s;
+}
+.shopwright .sw-shop-row:hover .sw-row-actions button{opacity:1}
+
+/* история */
+.shopwright .sw-history-row{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 12px;
+  border-bottom:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-history-row:hover{background:var(--sw-bg-row-hov)}
+.shopwright .sw-history-main{flex:1;min-width:0}
+.shopwright .sw-history-main strong{
+  display:block;font-size:12.5px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-history-main > span{
+  display:block;font-size:11px;color:var(--sw-ink-3);margin-top:2px;
+}
+.shopwright .sw-history-main small{font-size:10.5px;color:var(--sw-ink-3)}
+.shopwright .sw-history-money{
+  text-align:right;width:210px;flex:none;
+}
+.shopwright .sw-history-money > span{
+  display:block;margin-top:2px;
+  font:400 10.5px/1.4 var(--sw-f-num);color:var(--sw-ink-3);
+  word-spacing:-.22em;
+}
+.shopwright .sw-history-wallet{color:var(--sw-brass-dim) !important}
+/* колонка действий фиксирована: без этого строка едет,
+   когда у записи нет ссылки на предмет или покупателя */
+.shopwright .sw-history-actions{
+  display:flex;gap:2px;flex:none;width:54px;justify-content:flex-end;
+}
+.shopwright .sw-action-slot{width:26px;height:26px;flex:none}
+
+.shopwright .sw-history-kind{
+  flex:none;width:74px;text-align:center;
+  padding:3px 6px;border-radius:3px;
+  border:1px solid var(--sw-line-hard);
+  font:500 9.5px/1 var(--sw-f-ui);
+  letter-spacing:.11em;text-transform:uppercase;
+  color:var(--sw-ink-3);
+}
+.shopwright .sw-history-kind.is-buy{
+  color:var(--sw-brass);border-color:var(--sw-brass-dim);background:var(--sw-tint-brass);
+}
+.shopwright .sw-history-kind.is-sale{
+  color:var(--sw-patina);border-color:var(--sw-patina-dim);background:var(--sw-tint-patina);
+}
+.shopwright .sw-history-kind.is-service{
+  color:var(--sw-ink-2);border-color:var(--sw-line-hard);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   13. РЕДАКТОР МАГАЗИНА
+   Двухколоночная раскладка: слева паспорт магазина, справа вкладки.
+   Требует правки shop-editor.hbs — см. ДИЗАЙН-СИСТЕМА.md.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-editor-body{
+  display:grid;grid-template-columns:minmax(0,270px) minmax(0,1fr);
+  flex:1;height:100%;min-height:0;min-width:0;overflow:hidden;
+}
+.shopwright .sw-editor-header{
+  display:block;padding:12px;overflow-y:auto;min-height:0;scrollbar-gutter:stable;
+  background:var(--sw-bg-panel);
+  border-right:1px solid var(--sw-line);
+}
+.shopwright .sw-image-preview{
+  position:relative;display:block;
+  width:100%;height:auto;aspect-ratio:1;padding:0;
+  margin-bottom:12px;
+  border:1px solid var(--sw-line-hard);border-radius:var(--sw-r);
+  background:var(--sw-thumb-bg);overflow:hidden;
+}
+.shopwright .sw-image-preview img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.shopwright .sw-image-preview > span{
+  position:absolute;inset:auto 0 0 0;
+  padding:6px;text-align:center;
+  background:linear-gradient(transparent,rgba(9,10,13,.92));
+  color:#fff;font-size:11px;
+  opacity:0;transition:opacity .15s;
+}
+.shopwright .sw-image-preview:hover > span{opacity:1}
+.shopwright .sw-fields > label,
+.shopwright .sw-description-field{display:block;margin-bottom:10px}
+.shopwright .sw-id-field input{
+  font-family:var(--sw-f-num);font-size:11.5px;color:var(--sw-ink-2);
+}
+.shopwright .sw-description-field{margin:0}
+
+.shopwright .sw-editor-main{
+  display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;
+}
+.shopwright .sw-editor-panel{
+  flex:1;min-height:0;min-width:0;
+  overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;
+}
+
+/* зона перетаскивания и сортировка остаются видимыми при прокрутке */
+.shopwright .sw-editor-sticky-tools{
+  position:sticky;top:0;z-index:5;
+  display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;
+  padding:9px 12px;
+  background:var(--sw-bg-panel);
+  border-bottom:1px solid var(--sw-line);
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+.shopwright .sw-drop-zone{
+  display:flex;align-items:center;gap:9px;
+  flex:1 1 330px;min-width:0;margin:0;padding:10px 12px;
+  border:1px dashed var(--sw-line-hard);border-radius:var(--sw-r);
+  background:var(--sw-bg-tint);
+  text-align:left;font-size:11px;color:var(--sw-ink-3);
+}
+.shopwright .sw-drop-zone strong{
+  flex:none;margin:0;
+  font-weight:500;font-size:12.5px;color:var(--sw-ink-2);
+}
+.shopwright .sw-drop-zone > span{min-width:0;line-height:1.35}
+.shopwright .sw-drop-zone > i{display:inline;color:var(--sw-brass-dim);font-size:15px;flex:none}
+.shopwright .sw-drop-zone.is-dragging,
+.shopwright .sw-drop-zone.is-dragover{
+  border-color:var(--sw-brass);background:var(--sw-tint-brass);
+}
+
+/* «новые товары сразу в группу» */
+.shopwright .sw-new-item-group{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 12px;
+  background:var(--sw-bg-band);
+  border-top:1px solid var(--sw-line);
+  border-bottom:1px solid var(--sw-line);
+  font-size:11.5px;color:var(--sw-ink-3);
+}
+.shopwright .sw-new-item-group label{
+  display:flex;align-items:center;gap:8px;margin:0;flex:1;
+}
+.shopwright .sw-new-item-group label > span:first-child{
+  margin:0;text-transform:none;letter-spacing:0;font-size:11.5px;
+}
+.shopwright .sw-new-item-group select{
+  width:200px;height:24px;font-size:12px;margin-left:auto;
+  background-position:calc(100% - 14px) 10px,calc(100% - 9px) 10px;
+}
+
+/* массовые действия */
+.shopwright .sw-batch-assignment{
+  background:var(--sw-bg-band);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-batch-assignment > summary{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;cursor:pointer;list-style:none;
+  font-size:12px;color:var(--sw-ink-2);
+}
+.shopwright .sw-batch-assignment > summary::-webkit-details-marker{display:none}
+.shopwright .sw-batch-assignment > summary::before{
+  content:"\25B8";color:var(--sw-ink-3);font-size:10px;transition:transform .15s;
+}
+.shopwright .sw-batch-assignment[open] > summary::before{transform:rotate(90deg)}
+.shopwright .sw-batch-assignment > summary [data-selection-count]{
+  margin-left:auto;
+  font:500 10px/1 var(--sw-f-num);color:var(--sw-ink-3);
+  border:1px solid var(--sw-line);border-radius:3px;padding:3px 6px;
+}
+.shopwright .sw-batch-assignment-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;padding:0 12px 12px;align-items:end;
+}
+.shopwright .sw-batch-assignment-grid label{margin:0}
+.shopwright .sw-batch-assignment-grid select{
+  height:24px;font-size:12px;
+  background-position:calc(100% - 14px) 10px,calc(100% - 9px) 10px;
+}
+.shopwright .sw-batch-assignment-grid button{height:24px;font-size:11px}
+.shopwright .sw-batch-delete{color:var(--sw-rust)}
+
+/* строка товара
+   Контролы вынесены в отдельный блок, чтобы при нехватке ширины
+   переноситься целиком, а не сжимать название. */
+.shopwright .sw-editor-items{padding:0}
+.shopwright .sw-editor-item{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;row-gap:6px;
+  min-height:var(--sw-row-h);
+  padding:5px 12px 5px 9px;
+  border-bottom:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-editor-item:hover{background:var(--sw-bg-row-hov)}
+.shopwright .sw-editor-item-main{flex:1;min-width:180px}
+.shopwright .sw-item-name{
+  display:block;width:100%;height:auto;padding:0;
+  background:none;border:none;border-radius:0;text-align:left;
+}
+.shopwright .sw-item-name:hover{background:none}
+.shopwright .sw-item-name strong{
+  display:block;font-size:13px;font-weight:400;color:var(--sw-ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-item-name small{
+  display:block;font-size:11px;color:var(--sw-ink-3);margin-top:1px;
+}
+.shopwright .sw-editor-item.is-missing{background:var(--sw-tint-rust)}
+.shopwright .sw-missing-note{color:var(--sw-rust-soft) !important}
+
+.shopwright .sw-item-classification{
+  display:flex;align-items:center;gap:8px;margin-left:auto;flex:none;
+}
+.shopwright .sw-item-classification label,
+.shopwright .sw-item-quantity,
+.shopwright .sw-item-custom-price{margin:0}
+/* подписи полей в строке скрыты — их роль берёт шапка колонок */
+.shopwright .sw-item-classification label > span:first-child,
+.shopwright .sw-item-quantity > span:first-child,
+.shopwright .sw-item-custom-price > span:first-child{display:none}
+.shopwright .sw-item-kind select{width:100px}
+.shopwright .sw-item-group select{width:146px}
+.shopwright .sw-item-classification select{
+  height:24px;font-size:12px;
+  background-position:calc(100% - 14px) 10px,calc(100% - 9px) 10px;
+}
+.shopwright .sw-item-quantity input{width:64px;height:24px}
+.shopwright .sw-item-custom-price input{width:84px;height:24px}
+
+/* собственные правила остатка */
+.shopwright .sw-item-stock-overrides{
+  flex-basis:100%;order:9;margin:0 -12px -5px -9px;
+  background:var(--sw-bg-tint);
+  border-top:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-item-stock-overrides > summary{
+  padding:5px 12px 5px 62px;cursor:pointer;list-style:none;
+  font-size:11.5px;color:var(--sw-ink-3);
+}
+.shopwright .sw-item-stock-overrides > summary::-webkit-details-marker{display:none}
+.shopwright .sw-item-stock-overrides > summary::before{content:"\25B8 ";font-size:10px}
+.shopwright .sw-item-stock-overrides[open] > summary::before{content:"\25BE "}
+.shopwright .sw-override-toggle{
+  display:flex;align-items:center;gap:9px;
+  padding:2px 12px 8px 62px;font-size:11.5px;color:var(--sw-ink-3);
+}
+.shopwright .sw-override-toggle > span:first-child{margin:0}
+.shopwright .sw-item-stock-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;padding:0 12px 10px 62px;
+}
+.shopwright .sw-item-stock-grid label{margin:0}
+.shopwright .sw-item-stock-grid input{height:24px}
+
+
+/* ─── ТОВАРНЫЕ ГРУППЫ ───
+   Карточка читается как правило, а не заполняется как анкета.
+   Требует правки шаблона: sw-product-group-grid → sw-group-rule. */
+.shopwright .sw-groups-toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 12px;
+  background:var(--sw-bg-band);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-groups-toolbar h3 > i{color:var(--sw-brass);margin-right:6px}
+.shopwright .sw-groups-toolbar p{
+  font-size:11px;color:var(--sw-ink-3);margin-top:3px;
+}
+.shopwright .sw-groups-actions{display:flex;gap:6px;margin-left:auto}
+.shopwright .sw-groups-actions button{height:24px;font-size:11px}
+
+.shopwright .sw-product-group-card{
+  margin:10px 12px;
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+  background:var(--sw-bg-row);
+}
+.shopwright .sw-product-group-card + .sw-product-group-card{margin-top:8px}
+.shopwright .sw-product-group-card > header{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px 5px;background:none;border:none;
+}
+.shopwright .sw-product-group-card > header > label{
+  flex:none;margin:0;max-width:260px;
+}
+.shopwright .sw-product-group-card > header > label > span:first-child{display:none}
+.shopwright .sw-product-group-card > header input[type=text]{
+  height:24px;padding:0 2px;
+  background:none;border:none;border-bottom:1px solid transparent;
+  border-radius:0;box-shadow:none;
+  font:700 15px/1 var(--sw-f-display);color:var(--sw-ink);
+}
+.shopwright .sw-product-group-card > header input[type=text]:hover{
+  border-bottom-color:var(--sw-line-hard);
+}
+.shopwright .sw-product-group-card > header input[type=text]:focus{
+  border-bottom-color:var(--sw-brass);box-shadow:none;
+}
+.shopwright .sw-group-meta{
+  display:flex;gap:6px;align-items:center;margin-left:auto;
+}
+
+/* строка-правило: подписи внутри фразы, поля без боксов */
+.shopwright .sw-group-rule{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;
+  padding:0 11px 9px;font-size:12px;color:var(--sw-ink-3);
+}
+/* клауза правила не разрывается переносом: «пополнение +2d20» либо целиком
+   на строке, либо целиком на следующей */
+.shopwright .sw-rule-part{
+  display:inline-flex;align-items:baseline;gap:4px;white-space:nowrap;
+}
+.shopwright .sw-rule-part + .sw-rule-part::before{
+  content:"·";color:var(--sw-line-hard);margin-right:8px;
+}
+.shopwright .sw-group-rule b{font-weight:400;color:var(--sw-ink-2)}
+.shopwright .sw-group-rule .sw-sep{color:var(--sw-line-hard);margin:0 2px}
+.shopwright .sw-group-rule input[type=text],
+.shopwright .sw-group-rule input[type=number],
+.shopwright .sw-group-rule select{
+  width:auto;flex:none;height:22px;padding:0 3px;
+  background:none;border:none;
+  border-bottom:1px dashed var(--sw-line-hard);border-radius:0;
+  box-shadow:none;
+  font-family:var(--sw-f-num);font-variant-numeric:tabular-nums;
+  font-size:12.5px;color:var(--sw-ink);text-align:center;
+}
+.shopwright .sw-group-rule select{
+  padding:0 15px 0 3px;font-family:var(--sw-f-ui);text-align:left;
+  background-position:calc(100% - 8px) 9px,calc(100% - 4px) 9px;
+  background-size:4px 4px,4px 4px;
+}
+.shopwright .sw-group-rule input:hover,
+.shopwright .sw-group-rule select:hover{border-bottom-color:var(--sw-ink-3)}
+.shopwright .sw-group-rule input:focus,
+.shopwright .sw-group-rule select:focus{
+  border-bottom-style:solid;border-bottom-color:var(--sw-brass);box-shadow:none;
+}
+.shopwright .sw-group-rule input::placeholder{font-style:italic}
+/* ширины заданы с тем же весом селектора, что и базовое правило полей,
+   иначе width:100% из него растягивает подчёркивание на всю строку */
+.shopwright .sw-group-rule input.sw-rule-interval{width:38px}
+.shopwright .sw-group-rule input.sw-rule-formula{width:62px}
+.shopwright .sw-group-rule input.sw-rule-max{width:52px}
+.shopwright .sw-group-rule input.sw-rule-mult{width:48px}
+.shopwright .sw-group-rule select.sw-rule-unit{width:auto;min-width:70px}
+/* знаки операций окрашены: направление видно без чтения слов */
+.shopwright .sw-sign-plus{color:var(--sw-patina);font-family:var(--sw-f-num);font-weight:600}
+.shopwright .sw-sign-minus{color:var(--sw-rust);font-family:var(--sw-f-num);font-weight:600}
+.shopwright .sw-sign-mul{color:var(--sw-brass);font-family:var(--sw-f-num);font-weight:600}
+
+.shopwright .sw-product-group-card > footer{
+  display:flex;align-items:center;gap:8px;
+  padding:0 11px 9px;background:none;border:none;
+  font-size:11.5px;color:var(--sw-ink-3);
+}
+.shopwright .sw-group-auto{
+  display:flex;align-items:center;gap:9px;margin:0;
+}
+.shopwright .sw-group-auto > span:first-child{display:none}
+.shopwright .sw-product-group-card > footer > button{
+  margin-left:auto;height:24px;font-size:11px;
+}
+/* выключенное автообновление гасит правило, но не заголовок:
+   группа существует и её всё ещё можно обновить вручную */
+.shopwright .sw-product-group-card.is-disabled .sw-group-rule{opacity:.45}
+
+
+/* ─── ВКЛАДКА «ПРОДАЖА» В РЕДАКТОРЕ ─── */
+.shopwright .sw-sales-settings > header,
+.shopwright .sw-wallet-settings > header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:var(--sw-bg-band);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-sales-settings > header > i,
+.shopwright .sw-wallet-settings > header > i{color:var(--sw-brass);font-size:15px}
+.shopwright .sw-sales-settings > header div,
+.shopwright .sw-wallet-settings > header div{flex:1;min-width:0}
+.shopwright .sw-wallet-settings > header > strong{
+  margin-left:auto;
+  font-family:var(--sw-f-num);font-size:12.5px;color:var(--sw-ink);
+  word-spacing:-.22em;
+}
+.shopwright .sw-sales-settings-grid,
+.shopwright .sw-wallet-settings-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;padding:11px 12px;
+}
+.shopwright .sw-setting-card{
+  display:flex;align-items:flex-start;gap:10px;margin:0;
+  padding:9px 11px;
+  background:var(--sw-bg-row);
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+}
+.shopwright .sw-setting-card:hover{border-color:var(--sw-line-hard)}
+/* :not() обязателен — иначе flex:1 попадёт на тумблер и растянет его */
+.shopwright .sw-setting-card > span:not(.sw-switch){
+  flex:1 1 auto;min-width:0;margin:0;
+}
+.shopwright .sw-setting-card strong{
+  display:block;font-weight:500;font-size:12.5px;color:var(--sw-ink);
+}
+.shopwright .sw-setting-card small{
+  display:block;margin-top:2px;
+  font-size:11px;line-height:1.45;color:var(--sw-ink-3);
+}
+/* тумблер и числовое поле — фиксированной ширины, прижаты вправо */
+.shopwright .sw-setting-card > input[type=checkbox]{
+  order:2;margin-left:auto;margin-top:1px;
+}
+.shopwright .sw-buyback-setting > div{
+  order:2;margin-left:auto;flex:none;
+  display:flex;align-items:center;gap:5px;
+}
+.shopwright .sw-buyback-setting input{width:64px}
+
+.shopwright .sw-wallet-currencies{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;padding:0 12px 11px;
+}
+.shopwright .sw-wallet-currencies label{margin:0;text-align:center}
+.shopwright .sw-wallet-currencies label > span:first-child{text-align:center}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   14. ВИТРИНА
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-store-hero{
+  display:flex;align-items:center;gap:12px;flex:none;flex-wrap:wrap;
+  padding:11px 14px;
+  background:var(--sw-bg-panel);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-store-image{
+  width:48px;height:48px;flex:none;
+  border-radius:var(--sw-r);
+  border:1px solid var(--sw-line-hard);
+  background:var(--sw-thumb-bg);overflow:hidden;
+}
+.shopwright .sw-store-image img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.shopwright .sw-store-copy{flex:1;min-width:0}
+.shopwright .sw-store-copy h2{font-size:21px}
+.shopwright .sw-edit-shop-button{
+  flex:none;height:30px;padding:0 10px;
+  color:var(--sw-brass);border-color:var(--sw-brass-dim);background:var(--sw-tint-brass);
+}
+.shopwright .sw-edit-shop-button:hover{
+  color:var(--sw-brass);border-color:var(--sw-brass);background:var(--sw-tint-brass);
+}
+/* Описание обрезается двумя строками: длинный текст в узком окне иначе
+   выдавливает товары за пределы экрана. Разворачивается по кнопке,
+   которую скрипт показывает только при реальном переполнении. */
+.shopwright .sw-store-description{
+  font-size:12px;line-height:1.45;color:var(--sw-ink-2);margin-top:3px;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;
+}
+.shopwright .sw-store-description.is-expanded{
+  -webkit-line-clamp:unset;
+  max-height:7.3em;overflow-y:auto;
+  padding-right:6px;
+}
+.shopwright .sw-store-description-toggle{
+  height:auto;padding:2px 0;margin-top:3px;
+  background:none;border:none;border-radius:0;
+  color:var(--sw-brass);font-size:11px;
+}
+.shopwright .sw-store-description-toggle:hover{
+  background:none;color:var(--sw-brass);text-decoration:underline;
+}
+
+/* панель покупателя — компактная, в шапке, а не отдельной строкой */
+.shopwright .sw-buyer-bar{display:contents}
+.shopwright .sw-buyer-bar > button{
+  display:flex;align-items:center;gap:9px;
+  width:264px;min-width:0;flex:none;margin-left:auto;
+  height:auto;padding:7px 8px;
+  background:var(--sw-bg-row);
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+  text-align:left;
+}
+.shopwright .sw-buyer-bar > button:hover{
+  background:var(--sw-bg-row-hov);border-color:var(--sw-brass-dim);
+}
+.shopwright .sw-buyer-bar > button.is-empty{border-style:dashed}
+.shopwright .sw-buyer-bar > button > img{
+  width:34px;height:34px;flex:none;
+  border-radius:3px;object-fit:cover;
+  border:1px solid var(--sw-line-hard);
+  background:var(--sw-thumb-bg);
+}
+.shopwright .sw-buyer-copy{flex:1;min-width:0;overflow:hidden}
+.shopwright .sw-buyer-heading small{
+  font:500 9px/1 var(--sw-f-ui);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--sw-ink-3);
+}
+.shopwright .sw-buyer-heading strong{
+  display:block;margin-top:3px;font-size:13px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-buyer-copy > em{
+  font-style:normal;font-size:10.5px;color:var(--sw-ink-3);
+}
+.shopwright .sw-buyer-wallet{
+  display:flex !important;flex-wrap:wrap;gap:4px 14px;
+  margin-top:5px;padding-top:5px;
+  border-top:1px solid var(--sw-line-soft);
+  font-family:var(--sw-f-num);font-size:11px;
+  word-spacing:-.22em;
+}
+.shopwright .sw-buyer-edit{flex:none;color:var(--sw-ink-3);font-size:12px}
+.shopwright .sw-buyer-empty-icon{
+  width:34px;height:34px;flex:none;
+  display:grid;place-items:center;
+  border:1px dashed var(--sw-line-hard);border-radius:3px;
+  color:var(--sw-ink-3);
+}
+
+.shopwright .sw-store-tools{
+  display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;
+  padding:8px 12px;border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-store-search{min-width:210px}
+.shopwright .sw-sort-controls{
+  display:flex;align-items:center;gap:5px;flex:none;
+}
+.shopwright .sw-sort-select{
+  position:relative;display:block;flex:none !important;width:154px;margin:0;
+}
+.shopwright .sw-sort-select > i{
+  position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  z-index:1;pointer-events:none;color:var(--sw-ink-3);font-size:11px;
+}
+.shopwright .sw-sort-select select{
+  height:30px;padding-left:27px;font-size:11.5px;
+}
+.shopwright .sw-sort-controls > button{
+  width:30px;height:30px;padding:0;flex:none;
+}
+.shopwright .sw-editor-sort-controls{align-self:stretch}
+.shopwright .sw-editor-sort-controls .sw-sort-select{width:146px}
+.shopwright .sw-editor-sort-controls .sw-sort-select select,
+.shopwright .sw-editor-sort-controls > button{height:100%;min-height:34px}
+.shopwright [data-store-note]{
+  flex:none;padding:5px 8px;border-radius:3px;white-space:nowrap;
+  font:500 11px/1 var(--sw-f-num);letter-spacing:.05em;
+  color:var(--sw-brass);
+  border:1px solid var(--sw-brass-dim);
+  background:var(--sw-tint-brass);
+}
+/* на вкладке продажи нота меняет смысл — и цвет */
+.shopwright .sw-store-shell:has([data-store-panel="sales"]:not([hidden])) [data-store-note]{
+  color:var(--sw-patina);
+  border-color:var(--sw-patina-dim);
+  background:var(--sw-tint-patina);
+}
+
+.shopwright .sw-store-items{
+  flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;
+}
+.shopwright .sw-product-group-heading{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--sw-bg-band);
+  border-top:1px solid var(--sw-line);
+  border-bottom:1px solid var(--sw-line);
+  position:sticky;top:0;z-index:2;
+}
+.shopwright .sw-product-group-heading > div{
+  display:flex;align-items:center;gap:7px;
+}
+.shopwright .sw-product-group-heading strong{
+  font:600 10.5px/1 var(--sw-f-ui);
+  letter-spacing:.13em;text-transform:uppercase;color:var(--sw-ink-2);
+}
+.shopwright .sw-product-group-heading > div > i{color:var(--sw-ink-3);font-size:11px}
+.shopwright .sw-product-group-heading small{margin-left:auto}
+
+/* строка товара */
+.shopwright .sw-product{
+  display:flex;align-items:center;gap:10px;
+  min-height:var(--sw-row-h);
+  padding:5px 12px 5px 9px;
+  border-bottom:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-product:hover{background:var(--sw-bg-row-hov)}
+.shopwright .sw-product-main{flex:1;min-width:140px}
+.shopwright .sw-product-main button{
+  display:block;width:100%;height:auto;padding:0;
+  background:none;border:none;border-radius:0;text-align:left;
+}
+.shopwright .sw-product-main button:hover{background:none}
+.shopwright .sw-product-main button:hover strong{color:var(--sw-brass)}
+.shopwright .sw-product-main strong{
+  display:block;font-size:13px;font-weight:400;color:var(--sw-ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-product-main small{
+  display:block;margin-top:1px;font-size:11px;color:var(--sw-ink-3);
+}
+.shopwright .sw-product-stock{
+  flex:none;min-width:52px;text-align:right;
+  font-family:var(--sw-f-num);font-size:13px;color:var(--sw-ink-2);
+}
+.shopwright .sw-product-stock span{
+  display:block;margin-bottom:3px;
+  font:400 9px/1 var(--sw-f-ui);
+  letter-spacing:.09em;text-transform:uppercase;color:var(--sw-ink-3);
+}
+/* бесконечный запас — акцентом, это не число */
+.shopwright .sw-product-stock strong{color:var(--sw-brass);font-weight:400}
+
+.shopwright .sw-quantity-control{
+  display:flex;align-items:center;flex:none;margin:0;
+  height:24px;overflow:hidden;
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+  background:var(--sw-bg-sunk);
+}
+.shopwright .sw-quantity-control > span:first-child{display:none}
+.shopwright .sw-quantity-control input{
+  width:44px;height:22px;padding:0;
+  border:none;background:none;box-shadow:none;
+  text-align:center;font-family:var(--sw-f-num);font-size:12px;
+}
+.shopwright .sw-quantity-control input:focus{box-shadow:none}
+.shopwright .sw-quantity-control.is-disabled{opacity:.4;pointer-events:none}
+
+.shopwright .sw-product-price{
+  flex:none;min-width:86px;text-align:right;
+}
+.shopwright .sw-product-price small{
+  display:block;margin-top:2px;
+  font-size:9.5px;letter-spacing:.05em;color:var(--sw-ink-3);
+}
+
+.shopwright .sw-buy-button{
+  flex:none;height:24px;padding:0 10px;font-size:11px;font-weight:600;
+  background:var(--sw-brass-fill);
+  border-color:var(--sw-brass-fill);
+  color:var(--sw-brass-fill-ink);
+}
+.shopwright .sw-buy-button:hover{
+  filter:brightness(1.08);
+  background:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);
+}
+.shopwright .sw-sell-button{
+  flex:none;height:24px;padding:0 10px;font-size:11px;font-weight:500;
+  background:var(--sw-patina-fill);
+  border-color:var(--sw-patina-fill);
+  color:var(--sw-patina-fill-ink);
+}
+.shopwright .sw-sell-button:hover{
+  filter:brightness(1.14);
+  background:var(--sw-patina-fill);color:var(--sw-patina-fill-ink);
+}
+/* неактивные кнопки не должны выглядеть как приглушённое действие */
+.shopwright .sw-buy-button:disabled,
+.shopwright .sw-sell-button:disabled{
+  background:var(--sw-bg-btn);
+  border-color:var(--sw-line-hard);
+  color:var(--sw-ink-3);
+  font-weight:400;filter:none;
+}
+.shopwright .sw-product.is-unaffordable .sw-buy-button:disabled,
+.shopwright .sw-sale-product .sw-sell-button:disabled{
+  color:var(--sw-rust);
+  border-color:var(--sw-rust-edge);
+  background:var(--sw-tint-rust);
+  opacity:1;
+}
+.shopwright .sw-product.is-sold-out,
+.shopwright .sw-product.is-unaffordable{opacity:.62}
+.shopwright .sw-product.is-missing{background:var(--sw-tint-rust)}
+
+/* средства торговца */
+.shopwright .sw-merchant-wallet{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;position:sticky;top:0;z-index:2;
+  background:var(--sw-bg-band);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-merchant-wallet > i{color:var(--sw-brass-dim)}
+.shopwright .sw-merchant-wallet > span{
+  font:500 10px/1 var(--sw-f-ui);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--sw-ink-3);
+}
+.shopwright .sw-merchant-wallet > strong{
+  margin-left:auto;
+  font-family:var(--sw-f-num);font-size:12.5px;color:var(--sw-ink);
+  word-spacing:-.22em;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   15. КАРТОЧКА ПРЕДМЕТА
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-preview-header{
+  display:flex;gap:12px;flex:none;
+  padding:13px 14px;
+  background:var(--sw-bg-panel);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-preview-header > img{
+  width:60px;height:60px;flex:none;
+  border-radius:var(--sw-r);
+  border:1px solid var(--sw-line-hard);
+  background:var(--sw-thumb-bg);object-fit:cover;
+}
+.shopwright .sw-preview-heading{min-width:0}
+.shopwright .sw-preview-heading > small{
+  font:500 9.5px/1 var(--sw-f-ui);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--sw-brass-dim);
+}
+.shopwright .sw-preview-heading h2{margin:5px 0 7px}
+.shopwright .sw-preview-meta{
+  display:flex;gap:16px;flex-wrap:wrap;margin:0;
+}
+.shopwright .sw-preview-meta dt{font-size:10.5px;color:var(--sw-ink-3)}
+.shopwright .sw-preview-meta dd{
+  margin:3px 0 0;
+  font:600 12px/1 var(--sw-f-num);color:var(--sw-ink);
+}
+.shopwright .sw-preview-properties{
+  display:flex;gap:5px;flex-wrap:wrap;flex:none;
+  padding:9px 14px;border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-preview-properties span{
+  font-size:11px;color:var(--sw-ink-2);
+  border:1px solid var(--sw-line-hard);border-radius:20px;
+  padding:3px 9px;
+}
+.shopwright .sw-preview-description{
+  flex:1;min-height:0;overflow-y:auto;
+  padding:12px 14px;
+  font-size:12.5px;line-height:1.62;color:var(--sw-ink-2);
+}
+.shopwright .sw-preview-description p{margin-bottom:9px}
+.shopwright .sw-preview-description strong{color:var(--sw-ink)}
+.shopwright .sw-preview-description a,
+.shopwright .sw-preview-description .content-link{
+  color:var(--sw-brass);background:none;border:none;
+  border-bottom:1px dotted var(--sw-brass-dim);
+  padding:0;text-decoration:none;
+}
+.shopwright .sw-preview-description .content-link i{color:var(--sw-brass-dim)}
+/* первый абзац описания читается как врезка — это «вкус» предмета */
+.shopwright .sw-preview-description > p:first-of-type{
+  border-left:2px solid var(--sw-brass-dim);
+  padding-left:11px;
+  font-family:var(--sw-f-display);font-size:13.5px;line-height:1.55;
+  color:var(--sw-ink);
+}
+.shopwright .sw-preview-footer{
+  display:flex;align-items:center;gap:16px;flex:none;
+  padding:10px 14px;
+  background:var(--sw-bg-panel);
+  border-top:1px solid var(--sw-line);
+}
+.shopwright .sw-preview-sale{display:flex;gap:18px;flex:1}
+.shopwright .sw-preview-sale small{
+  display:block;margin-bottom:4px;
+  font:500 9.5px/1 var(--sw-f-ui);
+  letter-spacing:.11em;text-transform:uppercase;color:var(--sw-ink-3);
+}
+.shopwright .sw-preview-footer button{height:24px;font-size:11px}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   16. ВЫБОР ПОКУПАТЕЛЯ
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-buyer-picker-head{
+  padding:10px 12px;flex:none;
+  background:var(--sw-bg-panel);
+  border-bottom:1px solid var(--sw-line);
+}
+.shopwright .sw-buyer-picker-head p{
+  margin-top:7px;font-size:11px;color:var(--sw-ink-3);
+}
+.shopwright .sw-buyer-list{flex:1;min-height:0;overflow-y:auto}
+.shopwright .sw-buyer-row{
+  display:flex;align-items:center;gap:10px;
+  width:100%;height:auto;padding:7px 12px;
+  background:none;border:none;border-radius:0;
+  border-bottom:1px solid var(--sw-line-soft);
+  text-align:left;
+}
+.shopwright .sw-buyer-row:hover{background:var(--sw-bg-row-hov)}
+.shopwright .sw-buyer-row.is-selected{
+  background:var(--sw-tint-brass);
+  box-shadow:inset 2px 0 0 var(--sw-brass);
+}
+.shopwright .sw-buyer-row > i{color:var(--sw-brass);flex:none}
+.shopwright .sw-buyer-row-copy{flex:1;min-width:0}
+.shopwright .sw-buyer-row-copy strong{
+  display:block;font-size:13px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* :not() обязателен — иначе display:block схлопнет монетный ряд */
+.shopwright .sw-buyer-row-copy small:not(.sw-purse){
+  display:block;margin-top:2px;font-size:10.5px;color:var(--sw-ink-3);
+}
+.shopwright .sw-buyer-row-copy small:last-child{
+  font-family:var(--sw-f-num);word-spacing:-.22em;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   17. НАСТРОЙКИ ТОРГОВЛИ
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-trade-settings-body{
+  flex:1;min-height:0;overflow-y:auto;padding:12px;
+}
+.shopwright .sw-trade-settings-body h2{
+  font-size:15px;margin-bottom:5px;
+}
+.shopwright .sw-trade-settings-body h2 > i{color:var(--sw-brass);margin-right:6px}
+.shopwright .sw-settings-hint{
+  margin-bottom:10px;font-size:11.5px;line-height:1.5;color:var(--sw-ink-3);
+}
+/* валюты — плитки по номиналу, а не строки во всю ширину окна */
+.shopwright .sw-currency-options{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;margin-bottom:18px;
+}
+.shopwright .sw-currency-options label{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin:0;padding:9px 4px 8px;
+  background:var(--sw-bg-row);
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+  text-align:center;font-size:11px;color:var(--sw-ink-2);cursor:pointer;
+}
+.shopwright .sw-currency-options label:hover{border-color:var(--sw-line-hard)}
+.shopwright .sw-currency-options label:has(input:not(:checked)){opacity:.45}
+.shopwright .sw-currency-options input[type=checkbox]{
+  order:2;
+  width:30px;min-width:30px;max-width:30px;
+  height:16px;min-height:16px;max-height:16px;
+}
+.shopwright .sw-currency-options input[type=checkbox]::after{width:10px;height:10px}
+.shopwright .sw-currency-options input[type=checkbox]:checked::after{left:16px}
+.shopwright .sw-setting-row{
+  display:flex;align-items:flex-start;gap:10px;margin:0;
+  padding:9px 11px;
+  background:var(--sw-bg-row);
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+}
+.shopwright .sw-setting-row > span{flex:1;min-width:0;margin:0}
+.shopwright .sw-setting-row > input[type=checkbox]{order:2;margin-left:auto}
+.shopwright .sw-setting-row strong{
+  display:block;font-weight:500;font-size:12.5px;color:var(--sw-ink);
+}
+.shopwright .sw-setting-row small{
+  display:block;margin-top:2px;font-size:11px;color:var(--sw-ink-3);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   18. АДАПТИВНОСТЬ
+   Окна Foundry меняются в размере независимо от браузера, поэтому
+   используются КОНТЕЙНЕРНЫЕ запросы, а не @media. Foundry 13 — Chromium,
+   поддержка есть.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Каждый адаптивный режим привязан к своему именованному контейнеру.
+   Без имени браузер выбирает ближайший контейнер: из-за этого правила узкого
+   окна раньше срабатывали по ширине правой колонки и отключали её скролл. */
+.shopwright .sw-shell,
+.shopwright .sw-editor-form{container:sw-window / inline-size}
+.shopwright .sw-editor-main{container:sw-editor-main / inline-size}
+.shopwright .sw-store-shell{container:sw-storefront / inline-size}
+.shopwright .sw-trade-settings-body{container:sw-trade-settings / inline-size}
+
+/* строка товара: контролы уходят под название до того, как оно сожмётся */
+@container sw-editor-main (max-width:720px){
+  .shopwright .sw-item-classification {
+    width:100%;margin-left:0;padding-left:53px;flex-wrap:wrap;
+  }
+  .shopwright .sw-item-classification > *{flex:1 1 auto;min-width:88px}
+  .shopwright .sw-item-classification select{width:100% !important}
+}
+@container sw-editor-main (max-width:600px){
+  .shopwright .sw-sales-settings-grid,
+  .shopwright .sw-wallet-settings-grid{grid-template-columns:minmax(0,1fr)}
+  .shopwright .sw-batch-assignment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shopwright .sw-item-stock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shopwright .sw-wallet-currencies{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@container sw-storefront (max-width:720px){
+  .shopwright .sw-store-search{flex-basis:100%}
+  .shopwright .sw-store-tools [data-store-note]{margin-left:auto}
+}
+@container sw-storefront (max-width:520px){
+  /* шапка перестраивается в сетку: картинка и название в одной строке,
+     описание и панель покупателя — во всю ширину под ними */
+  .shopwright .sw-store-hero{
+    display:grid;grid-template-columns:48px minmax(0,1fr);
+    gap:8px 12px;align-items:start;
+  }
+  .shopwright .sw-store-copy{grid-column:2}
+  .shopwright .sw-edit-shop-button{grid-column:1 / -1;width:100%}
+  .shopwright .sw-buyer-bar > button{
+    grid-column:1 / -1;width:100%;margin-left:0;
+  }
+  .shopwright .sw-product{flex-wrap:wrap;row-gap:6px}
+  .shopwright .sw-product-main{min-width:100%}
+  .shopwright .sw-sort-controls{flex:1}
+  .shopwright .sw-sort-select{flex:1 !important;width:auto}
+  .shopwright .sw-store-tools [data-store-note]{width:100%;text-align:center;margin-left:0}
+}
+@container sw-editor-main (max-width:520px){
+  .shopwright .sw-editor-sticky-tools{align-items:stretch}
+  .shopwright .sw-editor-sort-controls{width:100%}
+  .shopwright .sw-editor-sort-controls .sw-sort-select{flex:1 !important;width:auto}
+}
+@container sw-trade-settings (max-width:420px){
+  .shopwright .sw-currency-options{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* Узкое окно: боковая колонка уходит наверх. Запрос намеренно считает
+   только ширину корневого окна, а не одной из вложенных колонок. */
+@container sw-window (max-width:660px){
+  .shopwright .sw-manager-workspace,
+  .shopwright .sw-editor-body{
+    display:flex;flex-direction:column;
+    overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;
+  }
+  .shopwright .sw-category-panel,
+  .shopwright .sw-editor-header{border-right:none;border-bottom:1px solid var(--sw-line)}
+
+  /* В одну колонку прокручивается всё тело целиком. Явный flex-каркас
+     исключает промежуточную ширину, в которой ни родитель, ни список
+     не получали собственную полосу прокрутки. */
+  .shopwright .sw-editor-header{overflow:visible;flex:0 0 auto}
+  .shopwright .sw-editor-main{min-height:auto;overflow:visible;flex:0 0 auto}
+  .shopwright .sw-editor-panel{overflow:visible;flex:0 0 auto}
+  .shopwright .sw-editor-sticky-tools{top:0}
+
+  .shopwright .sw-category-panel{overflow:visible;flex:0 0 auto}
+  .shopwright .sw-category-list{overflow:visible}
+  .shopwright .sw-shop-panel{overflow:visible;flex:0 0 auto}
+  /* Только список магазинов отдаёт прокрутку общему workspace. История не
+     находится внутри sw-manager-workspace, поэтому обязана сохранять
+     собственный scroll-контейнер на любой ширине окна. */
+  .shopwright .sw-manager-shell.is-shops .sw-shop-list{overflow:visible}
+  .shopwright .sw-manager-shell.is-history .sw-history-list{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;
+  }
+
+  /* картинка магазина не должна занимать всю ширину узкого окна */
+  .shopwright .sw-image-preview{max-width:160px;margin:0 auto 12px}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   19. ЭЛЕМЕНТЫ, ДОБАВЛЕННЫЕ ВМЕСТЕ С НОВОЙ РАЗМЕТКОЙ
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* монетный ряд выравнивается вправо там, где показывает баланс */
+.shopwright .sw-merchant-wallet > .sw-purse,
+.shopwright .sw-wallet-settings > header > .sw-purse{
+  justify-content:flex-end;
+}
+.shopwright .sw-coin-empty{
+  font-family:var(--sw-f-ui);font-size:11px;color:var(--sw-ink-3);
+  word-spacing:normal !important;white-space:nowrap;
+}
+.shopwright .sw-buyer-prompt{
+  display:block !important;
+  font-family:var(--sw-f-ui);font-size:10.5px;line-height:1.3;color:var(--sw-ink-3);
+  white-space:normal;overflow-wrap:anywhere;word-spacing:normal;
+}
+
+/* шапка колонок над списком товаров в редакторе.
+   Ширины совпадают с полями строки: 16 + 10 + 28 = 54 px до названия. */
+.shopwright .sw-item-head{
+  display:flex;align-items:flex-end;gap:10px;
+  padding:8px 12px 6px 12px;
+  border-bottom:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-item-head-spacer{width:54px;flex:none}
+.shopwright .sw-item-head-action{width:26px;flex:none}
+.shopwright .sw-item-head .sw-editor-item-main,
+.shopwright .sw-item-head .sw-item-classification > div{
+  font:500 9.5px/1 var(--sw-f-ui);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--sw-ink-3);
+}
+.shopwright .sw-item-head .sw-item-kind{width:100px;flex:none}
+.shopwright .sw-item-head .sw-item-group{width:146px;flex:none}
+.shopwright .sw-item-head .sw-item-quantity{width:64px;flex:none}
+.shopwright .sw-item-head .sw-item-custom-price{width:84px;flex:none}
+
+/* товарная группа: заголовок и итоговая наценка */
+.shopwright .sw-group-title{flex:none;margin:0;max-width:260px}
+.shopwright .sw-group-title > span:first-child{display:none}
+.shopwright .sw-group-effective{
+  margin-left:auto;
+  font:500 10px/1 var(--sw-f-num);letter-spacing:.03em;
+  color:var(--sw-brass);
+  border:1px solid var(--sw-brass-dim);border-radius:3px;
+  padding:3px 5px;white-space:nowrap;
+}
+.shopwright .sw-product-group-card > footer > button{margin-left:0}
+
+/* плитки валют в настройках торговли */
+.shopwright .sw-currency-code{
+  font:600 15px/1 var(--sw-f-num);
+}
+.shopwright .sw-currency-name{font-size:11px;color:var(--sw-ink-2)}
+.shopwright .sw-currency-rate{
+  font:400 9.5px/1 var(--sw-f-num);color:var(--sw-ink-3);
+}
+
+/* шапка колонок исчезает раньше, чем строка начнёт мяться */
+@container sw-editor-main (max-width:720px){
+  .shopwright .sw-item-head{display:none}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   20. ДИАЛОГИ ПОДТВЕРЖДЕНИЯ
+   DialogV2 получает классы модуля, поэтому наследует тему. Но у него
+   своя разметка: содержимое лежит прямо в .window-content, а не в sw-shell,
+   и обнулённый отступ окна нужно вернуть.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright.sw-dialog .window-content{
+  display:block;
+  overflow:visible;
+  padding:14px;
+  background:var(--sw-bg-win);
+  color:var(--sw-ink);
+  font-size:13px;line-height:1.55;
+}
+.shopwright.sw-dialog .window-content p{margin:0 0 8px}
+.shopwright.sw-dialog .window-content strong{color:var(--sw-ink)}
+.shopwright.sw-dialog .dialog-content,
+.shopwright.sw-dialog .dialog-content > *{background:none}
+
+.shopwright .sw-purchase-confirm{display:grid;gap:10px}
+.shopwright .sw-purchase-confirm-copy{
+  padding:10px 11px;
+  background:var(--sw-bg-row);
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+}
+.shopwright .sw-purchase-confirm-copy p:last-child{margin:0}
+
+.shopwright .sw-transaction-quantity,
+.shopwright .sw-private-purchase-option{
+  display:flex;align-items:flex-start;gap:10px;margin:0;
+  padding:9px 11px;
+  background:var(--sw-bg-row);
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+}
+.shopwright .sw-transaction-quantity > span,
+.shopwright .sw-private-purchase-option > span{flex:1;min-width:0;margin:0}
+.shopwright .sw-transaction-quantity strong,
+.shopwright .sw-private-purchase-option strong{
+  display:block;font-weight:500;font-size:12.5px;color:var(--sw-ink);
+}
+.shopwright .sw-transaction-quantity small,
+.shopwright .sw-private-purchase-option small{
+  display:block;margin-top:2px;font-size:11px;line-height:1.45;color:var(--sw-ink-3);
+}
+.shopwright .sw-private-purchase-option strong i{color:var(--sw-brass-dim);margin-right:5px}
+/* тумблер и поле — фиксированной ширины, справа: та же схема, что в настройках */
+.shopwright .sw-private-purchase-option > input[type=checkbox]{
+  order:2;margin-left:auto;margin-top:1px;
+}
+.shopwright .sw-transaction-quantity > input[type=number]{
+  order:2;margin-left:auto;flex:none;width:76px;
+}
+
+/* ряд кнопок диалога */
+.shopwright.sw-dialog .form-footer,
+.shopwright.sw-dialog .dialog-buttons{
+  display:flex;gap:8px;margin-top:12px;
+}
+.shopwright.sw-dialog .form-footer button,
+.shopwright.sw-dialog .dialog-buttons button{flex:1;height:30px}
+/* первичное действие — латунью */
+.shopwright.sw-dialog .form-footer button[data-action="confirm"],
+.shopwright.sw-dialog .form-footer button[data-action="yes"],
+.shopwright.sw-dialog .dialog-buttons button.default{
+  background:var(--sw-brass-fill);
+  border-color:var(--sw-brass-fill);
+  color:var(--sw-brass-fill-ink);
+  font-weight:600;
+}
+.shopwright.sw-dialog .form-footer button[data-action="confirm"]:hover,
+.shopwright.sw-dialog .form-footer button[data-action="yes"]:hover,
+.shopwright.sw-dialog .dialog-buttons button.default:hover{
+  filter:brightness(1.08);
+  background:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);
+}
+
+/* v0.8.4 — однострочный ввод DialogV2 */
+.shopwright .sw-dialog-form{display:grid;gap:8px}
+.shopwright .sw-dialog-form label{display:block;margin:0}
+.shopwright .sw-dialog-form input[type="text"]{margin:0}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   23. ИСПРАВЛЕНИЯ v0.8.6
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Нативный список option рисуется браузером вне обычной коробки select.
+   color-scheme сообщает Chromium, какую системную палитру использовать,
+   а явные цвета служат запасным вариантом. */
+.shopwright.sw-theme-dark{color-scheme:dark}
+.shopwright.sw-theme-light,
+.shopwright.sw-theme-cool{color-scheme:light}
+.shopwright select option,
+.shopwright select optgroup{
+  color:var(--sw-ink);
+  background-color:var(--sw-bg-sunk);
+}
+.shopwright select optgroup{font-weight:600}
+
+/* Торговая строка: наличие и остаток читаются как одна величина.
+   Одинаковая ширина обычной и заблокированной кнопки не даёт колонкам
+   сдвигаться при смене «Купить» на «Не хватает денег» или «Нет денег». */
+.shopwright .sw-product-stock{
+  display:flex;
+  align-items:baseline;
+  justify-content:flex-end;
+  gap:7px;
+  min-width:112px;
+  white-space:nowrap;
+}
+.shopwright .sw-product-stock span{
+  display:inline;
+  margin:0;
+}
+.shopwright .sw-product-stock strong{
+  min-width:18px;
+  text-align:right;
+}
+.shopwright .sw-buy-button,
+.shopwright .sw-sell-button{
+  width:118px;
+  min-width:118px;
+  justify-content:center;
+}
+
+/* На совсем узкой витрине действие получает отдельную строку, поэтому
+   фиксированная ширина кнопки не создаёт горизонтальную прокрутку. */
+@container sw-storefront (max-width:520px){
+  .shopwright .sw-buy-button,
+  .shopwright .sw-sell-button{
+    margin-left:auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   20. ИМПОРТ И ЭКСПОРТ
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopwright .sw-transfer-panel{
+  flex:1;min-height:0;overflow-y:auto;
+  padding:14px;background:var(--sw-bg-win);
+}
+.shopwright .sw-transfer-intro{
+  display:flex;align-items:flex-start;gap:11px;
+  margin-bottom:12px;padding:10px 12px;
+  border:1px solid var(--sw-brass-dim);border-radius:var(--sw-r);
+  background:var(--sw-tint-brass);color:var(--sw-ink-2);
+}
+.shopwright .sw-transfer-intro > i{
+  margin-top:2px;color:var(--sw-brass);font-size:15px;flex:none;
+}
+.shopwright .sw-transfer-intro strong{display:block;color:var(--sw-ink);font-size:12.5px}
+.shopwright .sw-transfer-intro p{margin-top:3px;font-size:11.5px;line-height:1.45}
+.shopwright .sw-transfer-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+  align-items:start;
+}
+.shopwright .sw-transfer-card{
+  min-width:0;padding:13px;
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);
+  background:var(--sw-bg-panel);box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+.shopwright .sw-transfer-card > header{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--sw-line-soft);
+}
+.shopwright .sw-transfer-card-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;flex:none;border-radius:var(--sw-r);
+  background:var(--sw-tint-brass);border:1px solid var(--sw-brass-dim);color:var(--sw-brass);
+}
+.shopwright .sw-transfer-card h3{font-size:14px;color:var(--sw-ink)}
+.shopwright .sw-transfer-card header p{margin-top:2px;font-size:11px;color:var(--sw-ink-3)}
+.shopwright .sw-transfer-stats,
+.shopwright .sw-import-counts{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px;
+}
+.shopwright .sw-transfer-stats > span,
+.shopwright .sw-import-counts > span{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 7px;border:1px solid var(--sw-line);border-radius:3px;
+  background:var(--sw-bg-tint);font-size:10.5px;color:var(--sw-ink-2);
+}
+.shopwright .sw-transfer-stats i,
+.shopwright .sw-import-counts i{color:var(--sw-brass-dim)}
+.shopwright .sw-transfer-stats strong,
+.shopwright .sw-import-counts strong{font-family:var(--sw-f-num);color:var(--sw-ink)}
+.shopwright .sw-transfer-actions{display:flex;flex-direction:column;gap:7px}
+.shopwright .sw-transfer-actions > button{
+  width:100%;height:auto;min-height:45px;padding:7px 10px;
+  justify-content:flex-start;text-align:left;background:var(--sw-bg-btn);
+}
+.shopwright .sw-transfer-actions > button > i{
+  width:22px;color:var(--sw-ink-3);font-size:14px;flex:none;text-align:center;
+}
+.shopwright .sw-transfer-actions > button > span,
+.shopwright .sw-import-picker > span{
+  display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:3px;
+}
+.shopwright .sw-transfer-actions > button strong,
+.shopwright .sw-import-picker strong{font-size:12px;color:inherit}
+.shopwright .sw-transfer-actions > button small,
+.shopwright .sw-import-picker small{font-size:10.5px;color:var(--sw-ink-3)}
+.shopwright .sw-transfer-actions > button.sw-transfer-primary{
+  background:var(--sw-brass-fill);border-color:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);
+}
+.shopwright .sw-transfer-actions > button.sw-transfer-primary > i,
+.shopwright .sw-transfer-actions > button.sw-transfer-primary small{color:inherit;opacity:.8}
+.shopwright .sw-transfer-actions > button.sw-transfer-primary:hover{
+  background:var(--sw-brass-fill);border-color:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);filter:brightness(1.08);
+}
+.shopwright .sw-import-picker{
+  width:100%;height:132px;padding:18px;
+  display:flex;flex-direction:column;gap:10px;
+  border:1px dashed var(--sw-line-hard);background:var(--sw-bg-sunk);color:var(--sw-ink-2);
+}
+.shopwright .sw-import-picker:hover{border-color:var(--sw-brass-dim);background:var(--sw-tint-brass)}
+.shopwright .sw-import-picker > i{font-size:28px;color:var(--sw-brass-dim)}
+.shopwright .sw-import-picker > span{align-items:center}
+.shopwright .sw-import-file-head{
+  display:flex;align-items:center;gap:9px;padding:8px 9px;
+  border:1px solid var(--sw-line);border-radius:var(--sw-r);background:var(--sw-bg-sunk);
+}
+.shopwright .sw-import-file-head > i{font-size:18px;color:var(--sw-brass);flex:none}
+.shopwright .sw-import-file-head > div{flex:1;min-width:0}
+.shopwright .sw-import-file-head strong,
+.shopwright .sw-import-file-head small{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shopwright .sw-import-file-head strong{font:500 11.5px/1.3 var(--sw-f-num);color:var(--sw-ink)}
+.shopwright .sw-import-file-head small{margin-top:2px;font-size:10.5px;color:var(--sw-ink-3)}
+.shopwright .sw-import-file-head > button{
+  width:26px;height:26px;padding:0;flex:none;border-color:transparent;background:none;color:var(--sw-ink-3);
+}
+.shopwright .sw-import-meta{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px;
+  padding:8px 2px;font:400 10px/1.35 var(--sw-f-num);color:var(--sw-ink-3);
+}
+.shopwright .sw-import-meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shopwright .sw-import-modes{display:flex;flex-direction:column;gap:10px;margin-top:3px}
+.shopwright .sw-import-modes label{display:block;margin:0}
+.shopwright .sw-import-modes label > small{
+  display:block;margin-top:4px;font-size:10.5px;line-height:1.35;color:var(--sw-ink-3);
+}
+.shopwright .sw-import-run{
+  width:100%;margin-top:12px;background:var(--sw-brass-fill);border-color:var(--sw-brass-fill);
+  color:var(--sw-brass-fill-ink);font-weight:600;
+}
+.shopwright .sw-import-run:hover{
+  background:var(--sw-brass-fill);border-color:var(--sw-brass-fill);color:var(--sw-brass-fill-ink);filter:brightness(1.08);
+}
+
+@container sw-window (max-width:720px){
+  .shopwright .sw-transfer-grid{grid-template-columns:minmax(0,1fr)}
+}

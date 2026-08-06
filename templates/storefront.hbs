@@ -1,0 +1,126 @@
+{{#if missing}}
+  <section class="sw-empty"><p>Магазин не найден.</p></section>
+{{else}}
+<section class="sw-store-shell">
+  <header class="sw-store-hero">
+    <div class="sw-store-image"><img src="{{shop.image}}" alt="{{shop.name}}"></div>
+    <div class="sw-store-copy">
+      <h2>{{shop.name}}</h2>
+      {{#if shop.description}}
+        <p class="sw-store-description" data-store-description>{{shop.description}}</p>
+        <button type="button" class="sw-store-description-toggle" data-action="toggle-description" hidden>Читать полностью</button>
+      {{/if}}
+    </div>
+
+    {{#if isGM}}
+      <button type="button" class="sw-edit-shop-button" data-action="edit-shop" title="Открыть редактор этого магазина"><i class="fa-solid fa-hammer"></i> Редактор</button>
+    {{/if}}
+
+    <div class="sw-buyer-bar">
+      <button type="button" data-action="choose-buyer" class="{{#unless hasBuyer}}is-empty{{/unless}}">
+        {{#if hasBuyer}}
+          <img src="{{buyer.image}}" alt="{{buyer.name}}">
+          <span class="sw-buyer-copy">
+            <span class="sw-buyer-heading"><small data-role-label>Покупатель</small><strong>{{buyer.name}}</strong></span>
+            <em class="sw-buyer-wallet sw-purse">
+              {{#each buyer.walletParts}}<span class="sw-coin"><b>{{amount}}</b><i class="sw-d-{{denom}}">{{label}}</i></span>{{/each}}
+              {{#unless buyer.walletParts.length}}<span class="sw-coin sw-coin-empty">монет нет</span>{{/unless}}
+            </em>
+          </span>
+          <span class="sw-buyer-edit" aria-hidden="true"><i class="fa-solid fa-pen"></i></span>
+        {{else}}
+          <span class="sw-buyer-empty-icon"><i class="fa-solid fa-user-plus"></i></span>
+          <span class="sw-buyer-copy">
+            <span class="sw-buyer-heading"><small data-role-label>Покупатель</small><strong>Не выбран</strong></span>
+            <em class="sw-buyer-wallet sw-buyer-prompt">Нажмите, чтобы выбрать персонажа или NPC</em>
+          </span>
+        {{/if}}
+      </button>
+    </div>
+  </header>
+
+  <nav class="sw-shop-tabs sw-store-tabs" aria-label="Разделы магазина">
+    <button type="button" data-store-tab="products" class="{{#if productsActive}}is-active{{/if}}"><i class="fa-solid fa-basket-shopping"></i> Покупка <span>{{productCount}}</span></button>
+    <button type="button" data-store-tab="services" class="{{#if servicesActive}}is-active{{/if}}"><i class="fa-solid fa-bell-concierge"></i> Услуги <span>{{serviceCount}}</span></button>
+    <button type="button" data-store-tab="sales" class="{{#if salesActive}}is-active{{/if}}"><i class="fa-solid fa-hand-holding-dollar"></i> Продажа <span>{{saleCount}}</span></button>
+  </nav>
+
+  <div class="sw-store-tools" data-store-tools>
+    <label class="sw-store-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" data-search value="{{searchQuery}}" placeholder="Поиск по текущей вкладке..."></label>
+    <div class="sw-sort-controls" aria-label="Сортировка позиций">
+      <label class="sw-sort-select"><i class="fa-solid fa-arrow-down-wide-short"></i><select data-sort-key title="Сортировка позиций">{{#each sortOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <button type="button" data-action="toggle-sort-direction" title="{{sortDirectionTitle}}" aria-label="{{sortDirectionTitle}}"><i class="fa-solid {{sortDirectionIcon}}"></i></button>
+    </div>
+    <span data-store-note data-products="Наценка ×{{shop.priceMultiplier}}" data-services="Наценка ×{{shop.priceMultiplier}}" data-sales="Скупка {{buybackPercent}}%">Наценка ×{{shop.priceMultiplier}}</span>
+  </div>
+
+  <div class="sw-store-items" data-store-panel="products" {{#unless productsActive}}hidden{{/unless}}>
+    {{#if hasProducts}}
+      {{#each productSections}}
+        <section class="sw-product-group-section" data-group-id="{{id}}">
+          <header class="sw-product-group-heading"><div><i class="fa-solid fa-layer-group"></i><strong>{{name}}</strong></div>{{#if priceMultiplier}}<small>Наценка группы ×{{priceMultiplier}}</small>{{/if}}</header>
+          <div class="sw-product-group-items">
+            {{#each products}}
+              <article class="sw-product {{#if missing}}is-missing{{/if}} {{#if soldOut}}is-sold-out{{/if}} {{#unless affordable}}is-unaffordable{{/unless}}" data-name="{{name}}" data-rarity="{{rarity}}">
+                <img src="{{image}}" alt="{{name}}">
+                <div class="sw-product-main"><button type="button" data-action="open-item" data-entry-id="{{entryId}}" data-item-uuid="{{expectedUuid}}" data-shop-revision="{{shopRevision}}" title="Открыть описание товара"><strong>{{name}}</strong></button><small>{{type}}</small></div>
+                <div class="sw-product-stock"><span>В наличии</span><strong>{{quantityText}}</strong></div>
+                <label class="sw-quantity-control" title="Количество для покупки"><span>Кол-во</span><input type="number" data-quantity value="1" min="1" step="1" {{#if hasMaxQuantity}}max="{{maxQuantity}}"{{/if}} {{#if quantityDisabled}}disabled{{/if}}></label>
+                <div class="sw-product-price">{{#if priceParts}}<span class="sw-coin"><b>{{priceParts.amount}}</b><i class="sw-d-{{priceParts.denom}}">{{priceParts.label}}</i></span>{{else}}<strong>{{priceText}}</strong>{{/if}}<small>за единицу</small></div>
+                <button type="button" class="sw-buy-button" data-action="buy" data-entry-id="{{entryId}}" data-item-uuid="{{expectedUuid}}" data-shop-revision="{{shopRevision}}" title="{{buyTitle}}" {{#unless canBuy}}disabled{{/unless}}><i class="fa-solid fa-cart-shopping"></i> {{buyText}}</button>
+              </article>
+            {{/each}}
+          </div>
+        </section>
+      {{/each}}
+    {{else}}
+      <div class="sw-empty"><i class="fa-solid fa-box-open"></i><p>В этом магазине пока нет товаров.</p></div>
+    {{/if}}
+  </div>
+
+  <div class="sw-store-items" data-store-panel="services" {{#unless servicesActive}}hidden{{/unless}}>
+    {{#if hasServices}}
+      {{#each services}}
+        <article class="sw-product is-service {{#if missing}}is-missing{{/if}} {{#if soldOut}}is-sold-out{{/if}} {{#unless affordable}}is-unaffordable{{/unless}}" data-name="{{name}}" data-rarity="{{rarity}}">
+          <img src="{{image}}" alt="{{name}}">
+          <div class="sw-product-main"><button type="button" data-action="open-item" data-entry-id="{{entryId}}" data-item-uuid="{{expectedUuid}}" data-shop-revision="{{shopRevision}}" title="Открыть описание услуги"><strong>{{name}}</strong></button><small>{{type}} · услуга</small></div>
+          <div class="sw-product-stock"><span>Доступно</span><strong>{{quantityText}}</strong></div>
+          <label class="sw-quantity-control" title="Количество услуг"><span>Кол-во</span><input type="number" data-quantity value="1" min="1" step="1" {{#if hasMaxQuantity}}max="{{maxQuantity}}"{{/if}} {{#if quantityDisabled}}disabled{{/if}}></label>
+          <div class="sw-product-price">{{#if priceParts}}<span class="sw-coin"><b>{{priceParts.amount}}</b><i class="sw-d-{{priceParts.denom}}">{{priceParts.label}}</i></span>{{else}}<strong>{{priceText}}</strong>{{/if}}<small>за единицу</small></div>
+          <button type="button" class="sw-buy-button" data-action="buy" data-entry-id="{{entryId}}" data-item-uuid="{{expectedUuid}}" data-shop-revision="{{shopRevision}}" title="{{buyTitle}}" {{#unless canBuy}}disabled{{/unless}}><i class="fa-solid fa-coins"></i> {{buyText}}</button>
+        </article>
+      {{/each}}
+    {{else}}
+      <div class="sw-empty"><i class="fa-solid fa-bell-concierge"></i><p>В этом магазине пока нет услуг.</p></div>
+    {{/if}}
+  </div>
+
+  <div class="sw-store-items" data-store-panel="sales" {{#unless salesActive}}hidden{{/unless}}>
+    {{#if walletEnabled}}<div class="sw-merchant-wallet"><i class="fa-solid fa-wallet"></i><span>Средства торговца</span><strong class="sw-purse">{{#each walletBalanceParts}}<span class="sw-coin"><b>{{amount}}</b><i class="sw-d-{{denom}}">{{label}}</i></span>{{/each}}{{#unless walletBalanceParts.length}}<span class="sw-coin sw-coin-empty">монет нет</span>{{/unless}}</strong></div>{{/if}}
+    {{#unless salesEnabled}}
+      <div class="sw-empty"><i class="fa-solid fa-shop-lock"></i><p>Этот магазин не скупает предметы.</p></div>
+    {{else}}
+      {{#unless hasBuyer}}
+        <div class="sw-empty"><i class="fa-solid fa-user-tag"></i><p>Выберите персонажа, из инвентаря которого нужно продать предметы.</p></div>
+      {{else}}
+        {{#if hasSales}}
+          {{#each sales}}
+            <article class="sw-product sw-sale-product" data-name="{{name}}" data-rarity="{{rarity}}">
+              <img src="{{image}}" alt="{{name}}">
+              <div class="sw-product-main"><strong>{{name}}</strong><small>{{type}}{{#if sourceKnown}} · известный источник{{/if}}</small></div>
+              <div class="sw-product-stock"><span>В инвентаре</span><strong>{{quantityText}}</strong></div>
+              <label class="sw-quantity-control" title="Количество для продажи"><span>Кол-во</span><input type="number" data-quantity value="1" min="1" max="{{maxQuantity}}" step="1" {{#if quantityDisabled}}disabled{{/if}}></label>
+              <div class="sw-product-price">{{#if priceParts}}<span class="sw-coin"><b>{{priceParts.amount}}</b><i class="sw-d-{{priceParts.denom}}">{{priceParts.label}}</i></span>{{else}}<strong>{{priceText}}</strong>{{/if}}<small>за единицу</small></div>
+              <button type="button" class="sw-sell-button" data-action="sell" data-item-id="{{itemId}}" title="{{sellTitle}}" {{#unless canSell}}disabled{{/unless}}><i class="fa-solid fa-coins"></i> {{sellText}}</button>
+            </article>
+          {{/each}}
+        {{else}}
+          <div class="sw-empty"><i class="fa-solid fa-box-open"></i><p>В инвентаре нет предметов с ненулевой ценой, которые можно продать.</p></div>
+        {{/if}}
+      {{/unless}}
+    {{/unless}}
+  </div>
+
+  <footer class="sw-footer-note">Покупки, услуги и продажи игроков обрабатываются автоматически. Мастер ничего не подтверждает вручную.</footer>
+</section>
+{{/if}}

@@ -1,0 +1,27 @@
+<form class="sw-trade-settings-form">
+  <section class="sw-trade-settings-body">
+    <h2><i class="fa-solid fa-coins"></i> Валюта магазина</h2>
+    <p class="sw-settings-hint">Отключённые монеты не учитываются в кошельке, не списываются и не выдаются как сдача.</p>
+
+    <div class="sw-currency-options">
+      <label title="Платиновые монеты"><span class="sw-currency-code sw-d-pp">пм</span><span class="sw-currency-name">Платина</span><span class="sw-currency-rate">1000</span><input type="checkbox" name="currency.pp" {{checked config.currencies.pp}}></label>
+      <label title="Золотые монеты"><span class="sw-currency-code sw-d-gp">зм</span><span class="sw-currency-name">Золото</span><span class="sw-currency-rate">100</span><input type="checkbox" name="currency.gp" {{checked config.currencies.gp}}></label>
+      <label title="Электра"><span class="sw-currency-code sw-d-ep">эм</span><span class="sw-currency-name">Электра</span><span class="sw-currency-rate">50</span><input type="checkbox" name="currency.ep" {{checked config.currencies.ep}}></label>
+      <label title="Серебряные монеты"><span class="sw-currency-code sw-d-sp">см</span><span class="sw-currency-name">Серебро</span><span class="sw-currency-rate">10</span><input type="checkbox" name="currency.sp" {{checked config.currencies.sp}}></label>
+      <label title="Медные монеты"><span class="sw-currency-code sw-d-cp">мм</span><span class="sw-currency-name">Медь</span><span class="sw-currency-rate">1</span><input type="checkbox" name="currency.cp" {{checked config.currencies.cp}}></label>
+    </div>
+
+    <h2><i class="fa-solid fa-receipt"></i> Чеки</h2>
+    <label class="sw-setting-row">
+      <input type="checkbox" name="chatReceipts" {{checked config.chatReceipts}}>
+      <span>
+        <strong>Отправлять чек в чат</strong>
+        <small>История покупок ведётся независимо от этой настройки.</small>
+      </span>
+    </label>
+  </section>
+
+  <footer class="sw-form-footer">
+    <button type="submit" data-action="save"><i class="fa-solid fa-floppy-disk"></i> Сохранить</button>
+  </footer>
+</form>

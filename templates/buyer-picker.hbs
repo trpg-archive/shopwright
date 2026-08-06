@@ -1,0 +1,42 @@
+<section class="sw-buyer-picker-shell">
+  <header class="sw-buyer-picker-head">
+    <label>
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" data-buyer-search placeholder="Найти персонажа или NPC..." autofocus>
+    </label>
+    <p>
+      {{#if isGM}}
+        Доступны актёры мира и независимые токены текущей сцены.
+      {{else}}
+        Показаны все актёры, которыми вы владеете. Привязанный к пользователю персонаж не имеет особого приоритета.
+      {{/if}}
+    </p>
+  </header>
+
+  <div class="sw-buyer-list">
+    {{#if hasActors}}
+      {{#each actors}}
+        <button
+          type="button"
+          class="sw-buyer-row {{#if selected}}is-selected{{/if}}"
+          data-buyer-row
+          data-buyer-uuid="{{uuid}}"
+          data-search="{{searchText}}"
+        >
+          <img src="{{image}}" alt="{{name}}">
+          <span class="sw-buyer-row-copy">
+            <strong>{{name}}</strong>
+            <small>{{type}} · {{folder}}</small>
+            <small class="sw-purse">{{#each walletParts}}<span class="sw-coin"><b>{{amount}}</b><i class="sw-d-{{denom}}">{{label}}</i></span>{{/each}}{{#unless walletParts.length}}<span class="sw-coin sw-coin-empty">монет нет</span>{{/unless}}</small>
+          </span>
+          {{#if selected}}<i class="fa-solid fa-check"></i>{{/if}}
+        </button>
+      {{/each}}
+    {{else}}
+      <div class="sw-empty compact">
+        <i class="fa-solid fa-user-slash"></i>
+        <p>Нет доступных актёров с кошельком.</p>
+      </div>
+    {{/if}}
+  </div>
+</section>

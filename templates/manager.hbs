@@ -1,0 +1,266 @@
+<section class="sw-shell sw-manager-shell {{#if showShops}}is-shops{{else if showHistory}}is-history{{else if showTransfer}}is-transfer{{/if}}">
+  <header class="sw-toolbar">
+    <div>
+      <h2><i class="fa-solid {{managerIcon}}"></i> {{managerTitle}}</h2>
+      <p>Foundry {{coreVersion}} · dnd5e {{systemVersion}}</p>
+    </div>
+    {{#if showShops}}
+      {{#if isGM}}
+        <button type="button" data-action="create"><i class="fa-solid fa-plus"></i> Создать магазин</button>
+      {{/if}}
+    {{else if showHistory}}
+      {{#if hasHistory}}
+        <button type="button" class="danger" data-action="clear-history"><i class="fa-solid fa-trash"></i> Очистить</button>
+      {{/if}}
+    {{/if}}
+  </header>
+
+  <nav class="sw-manager-tabs" aria-label="Разделы менеджера">
+    <button type="button" data-tab="shops" class="{{#if showShops}}is-active{{/if}}">
+      <i class="fa-solid fa-store"></i> Магазины <span>{{shopCount}}</span>
+    </button>
+    <button type="button" data-tab="history" class="{{#if showHistory}}is-active{{/if}}">
+      <i class="fa-solid fa-clock-rotate-left"></i> История <span>{{historyCount}}</span>
+    </button>
+    {{#if isGM}}
+      <button type="button" data-tab="transfer" class="{{#if showTransfer}}is-active{{/if}}">
+        <i class="fa-solid fa-file-arrow-down"></i> Импорт и экспорт
+      </button>
+    {{/if}}
+  </nav>
+
+  {{#if showShops}}
+    <div class="sw-manager-workspace">
+      <aside class="sw-category-panel">
+        <div class="sw-category-heading">
+          <strong>Категории</strong>
+          <small>Фильтр магазинов</small>
+        </div>
+
+        <div class="sw-category-list">
+          <button type="button" class="sw-category-filter {{#if allCategoriesSelected}}is-active{{/if}}" data-category-filter="all">
+            <span><i class="fa-solid fa-layer-group"></i> Все магазины</span><em>{{shopCount}}</em>
+          </button>
+          <button type="button" class="sw-category-filter {{#if uncategorizedSelected}}is-active{{/if}}" data-category-filter="uncategorized">
+            <span><i class="fa-regular fa-folder-open"></i> Без категории</span><em>{{uncategorizedCount}}</em>
+          </button>
+
+          {{#each categories}}
+            <div class="sw-category-row">
+              <button type="button" class="sw-category-filter {{#if selected}}is-active{{/if}}" data-category-filter="{{id}}" title="Показать магазины категории">
+                <span><i class="fa-solid fa-folder"></i> {{name}}</span><em>{{count}}</em>
+              </button>
+              {{#if ../isGM}}
+                <button type="button" data-action="rename-category" data-category-id="{{id}}" title="Переименовать"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" class="danger" data-action="delete-category" data-category-id="{{id}}" title="Удалить"><i class="fa-solid fa-xmark"></i></button>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+
+        {{#if isGM}}
+          <div class="sw-category-create">
+            <input type="text" data-new-category placeholder="Новая категория...">
+            <button type="button" data-action="create-category" title="Создать категорию"><i class="fa-solid fa-plus"></i></button>
+          </div>
+        {{/if}}
+      </aside>
+
+      <section class="sw-shop-panel">
+        <div class="sw-shop-tools">
+          <label><i class="fa-solid fa-magnifying-glass"></i><input type="search" data-shop-search value="{{shopSearch}}" placeholder="Поиск по названию, описанию или категории..."></label>
+          {{#if isGM}}
+            <div class="sw-selected-token {{#unless hasSelectedToken}}is-empty{{/unless}}">
+              <i class="fa-solid fa-user-tag"></i>
+              {{#if hasSelectedToken}}
+                <span>Выбран токен: <strong>{{selectedTokenName}}</strong></span>
+                {{#if selectedTokenShopName}}
+                  <em><i class="fa-solid fa-link"></i> {{selectedTokenShopName}}</em>
+                {{else if selectedTokenMissingShop}}
+                  <em class="danger-text"><i class="fa-solid fa-link-slash"></i> магазин удалён</em>
+                {{else}}
+                  <em>магазин не назначен</em>
+                {{/if}}
+              {{else}}
+                <span>Выберите один токен на сцене, чтобы привязать к нему магазин.</span>
+              {{/if}}
+            </div>
+          {{/if}}
+        </div>
+
+        <div class="sw-shop-list">
+          {{#if hasShops}}
+            {{#each shops}}
+              <article class="sw-shop-row" data-shop-row data-search="{{searchText}}">
+                <img src="{{image}}" alt="{{name}}">
+                <div class="sw-shop-summary">
+                  <h3>{{name}}</h3>
+                  <p>{{description}}</p>
+                  <small>{{itemCount}} товаров · {{serviceCount}} услуг · наценка ×{{priceMultiplier}} · изменён {{updated}}</small>
+                  {{#if ../isGM}}
+                    <label class="sw-shop-category-select">
+                      <i class="fa-solid fa-folder"></i>
+                      <select data-action="set-category" data-shop-id="{{id}}" title="Категория магазина">
+                        {{#each categoryOptions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+                      </select>
+                    </label>
+                  {{else}}
+                    <small><i class="fa-solid fa-folder"></i> {{categoryName}}</small>
+                  {{/if}}
+                </div>
+                <div class="sw-row-actions">
+                  {{#if ../isGM}}
+                    <button type="button" class="sw-bind-token {{#if linkedToSelectedToken}}is-linked{{/if}}" data-action="bind-token" data-shop-id="{{id}}" title="{{bindTokenTitle}}" {{#unless canBindSelectedToken}}disabled{{/unless}}><i class="fa-solid {{bindTokenIcon}}"></i></button>
+                  {{/if}}
+                  <button type="button" data-action="open" data-shop-id="{{id}}" title="Открыть витрину"><i class="fa-solid fa-eye"></i></button>
+                  {{#if ../isGM}}
+                    <button type="button" data-action="edit" data-shop-id="{{id}}" title="Редактировать"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" data-action="duplicate" data-shop-id="{{id}}" title="Создать копию"><i class="fa-solid fa-copy"></i></button>
+                    <button type="button" class="danger" data-action="delete" data-shop-id="{{id}}" title="Удалить"><i class="fa-solid fa-trash"></i></button>
+                  {{/if}}
+                </div>
+              </article>
+            {{/each}}
+          {{else}}
+            <div class="sw-empty"><i class="fa-solid fa-shop-slash"></i><p>{{#if hasAnyShops}}В этой категории магазинов нет.{{else}}Магазинов пока нет.{{/if}}</p></div>
+          {{/if}}
+        </div>
+      </section>
+    </div>
+  {{else if showHistory}}
+    <div class="sw-history-tools">
+      <label><i class="fa-solid fa-magnifying-glass"></i><input type="search" data-history-search value="{{historySearch}}" placeholder="Поиск по игроку, персонажу, товару, услуге, продаже или магазину..."></label>
+    </div>
+    <div class="sw-history-list">
+      {{#if hasHistory}}
+        {{#each history}}
+          <article class="sw-history-row" data-history-row data-search="{{searchText}}">
+            <img src="{{itemImage}}" alt="{{itemName}}">
+            <div class="sw-history-main">
+              <strong>{{actionText}}</strong>
+              <span>в «{{shopName}}» · {{dateText}}{{#if privatePurchase}} · <i class="fa-solid fa-user-secret"></i> приватно{{/if}}</span>
+              <small>Игрок: {{requesterName}}</small>
+            </div>
+            <span class="sw-history-kind is-{{transactionKind}}">{{transactionLabel}}</span>
+            <div class="sw-history-money">
+              <strong>{{priceText}}</strong>
+              <span>{{moneyLineOne}}</span>
+              <span>{{moneyLineTwo}}</span>
+              {{#if walletLine}}<span class="sw-history-wallet">{{walletLine}}</span>{{/if}}
+            </div>
+            <div class="sw-history-actions">
+              {{#if buyerUuid}}<button type="button" data-open-uuid="{{buyerUuid}}" title="Открыть покупателя"><i class="fa-solid fa-user"></i></button>{{else}}<span class="sw-action-slot"></span>{{/if}}
+              {{#if itemUuid}}<button type="button" data-open-uuid="{{itemUuid}}" title="Открыть исходный предмет"><i class="fa-solid fa-suitcase"></i></button>{{else}}<span class="sw-action-slot"></span>{{/if}}
+            </div>
+          </article>
+        {{/each}}
+      {{else}}
+        <div class="sw-empty"><i class="fa-solid fa-receipt"></i><p>Операций пока не было.</p></div>
+      {{/if}}
+    </div>
+  {{else if showTransfer}}
+    <div class="sw-transfer-panel">
+      <div class="sw-transfer-intro">
+        <i class="fa-solid fa-shield-halved"></i>
+        <div>
+          <strong>Резервные копии хранятся обычными JSON-файлами.</strong>
+          <p>Магазины экспортируются вместе с категориями. Ссылки на товары и услуги сохраняются как UUID, поэтому при переносе в другой мир соответствующие компендиумы должны быть доступны под теми же адресами.</p>
+        </div>
+      </div>
+
+      <div class="sw-transfer-grid">
+        <section class="sw-transfer-card">
+          <header>
+            <span class="sw-transfer-card-icon"><i class="fa-solid fa-file-export"></i></span>
+            <div><h3>Экспорт</h3><p>Скачать выбранные данные на компьютер.</p></div>
+          </header>
+
+          <div class="sw-transfer-stats">
+            <span><i class="fa-solid fa-store"></i><strong>{{shopCount}}</strong> магазинов</span>
+            <span><i class="fa-solid fa-folder"></i><strong>{{categoryCount}}</strong> категорий</span>
+            <span><i class="fa-solid fa-clock-rotate-left"></i><strong>{{historyCount}}</strong> записей</span>
+          </div>
+
+          <div class="sw-transfer-actions">
+            <button type="button" data-action="export-shops"><i class="fa-solid fa-shop"></i><span><strong>Магазины и категории</strong><small>Без истории операций</small></span></button>
+            <button type="button" data-action="export-history"><i class="fa-solid fa-receipt"></i><span><strong>Только история</strong><small>Журнал покупок, услуг и продаж</small></span></button>
+            <button type="button" class="sw-transfer-primary" data-action="export-all"><i class="fa-solid fa-box-archive"></i><span><strong>Полная резервная копия</strong><small>Магазины, категории и история</small></span></button>
+          </div>
+        </section>
+
+        <section class="sw-transfer-card">
+          <header>
+            <span class="sw-transfer-card-icon"><i class="fa-solid fa-file-import"></i></span>
+            <div><h3>Импорт</h3><p>Добавить данные или восстановить их из копии.</p></div>
+          </header>
+
+          <input type="file" accept=".json,application/json" data-import-file hidden>
+          {{#if importReady}}
+            <div class="sw-import-preview">
+              <div class="sw-import-file-head">
+                <i class="fa-solid fa-file-code"></i>
+                <div><strong>{{importFileName}}</strong><small>Экспортировано {{importSummary.exportedAtText}}</small></div>
+                <button type="button" data-action="clear-import" title="Выбрать другой файл"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+
+              <div class="sw-import-meta">
+                <span>Модуль {{importSummary.moduleVersion}}</span>
+                <span>Foundry {{importSummary.foundryVersion}}</span>
+                <span>{{importSummary.systemId}} {{importSummary.systemVersion}}</span>
+                <span>Мир: {{importSummary.worldTitle}}</span>
+              </div>
+
+              <div class="sw-import-counts">
+                {{#if importSummary.hasShops}}<span><i class="fa-solid fa-store"></i><strong>{{importSummary.shopCount}}</strong> магазинов</span>{{/if}}
+                {{#if importSummary.hasShops}}<span><i class="fa-solid fa-folder"></i><strong>{{importSummary.categoryCount}}</strong> категорий</span>{{/if}}
+                {{#if importSummary.hasHistory}}<span><i class="fa-solid fa-clock-rotate-left"></i><strong>{{importSummary.historyCount}}</strong> записей</span>{{/if}}
+              </div>
+
+              <div class="sw-import-modes">
+                {{#if importSummary.hasShops}}
+                  <label>
+                    <span>Магазины и категории</span>
+                    <select data-import-shops-mode>
+                      <option value="merge" selected>Добавить как новые магазины</option>
+                      <option value="replace">Заменить все текущие</option>
+                      <option value="skip">Не импортировать</option>
+                    </select>
+                    <small>При добавлении категории с одинаковыми названиями объединяются, а магазины получают новые ID.</small>
+                  </label>
+                {{/if}}
+                {{#if importSummary.hasHistory}}
+                  <label>
+                    <span>История операций</span>
+                    <select data-import-history-mode>
+                      <option value="merge" selected>Добавить новые записи</option>
+                      <option value="replace">Заменить всю историю</option>
+                      <option value="skip">Не импортировать</option>
+                    </select>
+                    <small>При добавлении записи с уже существующими ID не дублируются.</small>
+                  </label>
+                {{/if}}
+              </div>
+
+              <button type="button" class="sw-import-run" data-action="run-import"><i class="fa-solid fa-file-import"></i> Выполнить импорт</button>
+            </div>
+          {{else}}
+            <button type="button" class="sw-import-picker" data-action="choose-import">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span><strong>Выбрать резервную копию</strong><small>Файл .json, не более 10 МБ</small></span>
+            </button>
+          {{/if}}
+        </section>
+      </div>
+    </div>
+  {{/if}}
+
+  <footer class="sw-footer-note">
+    {{#if showHistory}}
+      История хранится в данных мира и доступна мастеру.
+    {{else if showTransfer}}
+      Перед заменой данных рекомендуется сохранить полную резервную копию.
+    {{else}}
+      Быстрый доступ мастера: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>.
+    {{/if}}
+  </footer>
+</section>

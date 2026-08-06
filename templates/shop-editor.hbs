@@ -1,0 +1,255 @@
+{{#if missing}}
+  <section class="sw-empty"><p>Магазин не найден.</p></section>
+{{else}}
+<form class="sw-editor-form">
+  <section class="sw-editor-body">
+    <div class="sw-editor-header">
+      <button type="button" class="sw-image-preview" data-action="pick-image" data-target="image" data-type="image" title="Выбрать изображение">
+        <img data-image-preview src="{{shop.image}}" alt="{{shop.name}}">
+        <span><i class="fa-solid fa-folder-open"></i></span>
+      </button>
+
+      <div class="sw-fields">
+        <label><span>Название</span><input type="text" name="name" value="{{shop.name}}"></label>
+
+        <label class="sw-id-field">
+          <span>ID магазина</span>
+          <div class="sw-file-field"><input type="text" value="{{shop.id}}" readonly><button type="button" data-action="copy-id" title="Скопировать ID магазина"><i class="fa-solid fa-copy"></i></button></div>
+        </label>
+
+        <label class="sw-image-field">
+          <span>Изображение</span>
+          <div class="sw-file-field"><input type="text" name="image" value="{{shop.image}}" placeholder="{{defaultImage}}"><button type="button" data-action="pick-image" data-target="image" data-type="image" title="Открыть выбор файлов"><i class="fa-solid fa-folder-open"></i></button></div>
+        </label>
+
+        <label><span>Категория</span><select name="categoryId">{{#each categoryOptions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+        <label><span>Общая наценка</span><input type="number" name="priceMultiplier" value="{{shop.priceMultiplier}}" min="0.01" step="0.01"></label>
+      </div>
+
+      <label class="sw-description-field"><span>Описание</span><textarea name="description" rows="3">{{shop.description}}</textarea></label>
+    </div>
+
+    <div class="sw-editor-main">
+    <nav class="sw-shop-tabs sw-editor-tabs" aria-label="Разделы магазина">
+      <button type="button" data-editor-tab="products" class="{{#if productsActive}}is-active{{/if}}"><i class="fa-solid fa-basket-shopping"></i> Покупка <span>{{productCount}}</span></button>
+      <button type="button" data-editor-tab="services" class="{{#if servicesActive}}is-active{{/if}}"><i class="fa-solid fa-bell-concierge"></i> Услуги <span>{{serviceCount}}</span></button>
+      <button type="button" data-editor-tab="groups" class="{{#if groupsActive}}is-active{{/if}}"><i class="fa-solid fa-layer-group"></i> Товарные группы <span>{{groupCount}}</span></button>
+      <button type="button" data-editor-tab="sales" class="{{#if salesActive}}is-active{{/if}}"><i class="fa-solid fa-hand-holding-dollar"></i> Продажа</button>
+    </nav>
+
+    <section class="sw-editor-panel" data-editor-panel="products" {{#unless productsActive}}hidden{{/unless}}>
+      <div class="sw-editor-sticky-tools">
+        <div class="sw-drop-zone" data-kind="product">
+          <i class="fa-solid fa-box-open"></i><strong>Перетащите сюда товар</strong><span>После покупки предмет будет добавлен в инвентарь выбранного персонажа.</span>
+        </div>
+        <div class="sw-sort-controls sw-editor-sort-controls" aria-label="Сортировка товаров">
+          <label class="sw-sort-select"><i class="fa-solid fa-arrow-down-wide-short"></i><select data-editor-sort-key title="Сортировка товаров">{{#each sortOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+          <button type="button" data-action="toggle-editor-sort-direction" title="{{sortDirectionTitle}}" aria-label="{{sortDirectionTitle}}"><i class="fa-solid {{sortDirectionIcon}}"></i></button>
+        </div>
+      </div>
+
+      {{#if hasProductGroups}}
+        <div class="sw-new-item-group">
+          <i class="fa-solid fa-arrow-down-wide-short"></i>
+          <label><span>Новые товары сразу добавлять в группу</span><select data-new-item-group>{{#each newItemGroupOptions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+        </div>
+      {{/if}}
+
+      <details class="sw-batch-assignment" data-batch-panel data-batch-scope="products">
+        <summary><i class="fa-solid fa-list-check"></i> Массовые действия <span data-selection-count>0 выбрано</span></summary>
+        <div class="sw-batch-assignment-grid {{#if hasProductGroups}}has-group-tools{{/if}}">
+          {{#if hasProductGroups}}
+            <label class="sw-batch-source-group"><span>Исходная группа</span><select data-batch-source-group>{{#each batchSourceGroupOptions}}<option value="{{id}}">{{name}}</option>{{/each}}</select></label>
+            <label class="sw-batch-source-type"><span>Тип предмета</span><select data-batch-source-type>{{#each batchTypeOptions}}<option value="{{value}}">{{label}}</option>{{/each}}</select></label>
+            <button type="button" data-action="select-matching-items"><i class="fa-solid fa-filter-circle-check"></i> Выделить подходящие</button>
+          {{/if}}
+          <button type="button" data-action="select-all-items"><i class="fa-solid fa-check-double"></i> Выделить все в разделе</button>
+          <button type="button" data-action="clear-item-selection"><i class="fa-solid fa-xmark"></i> Снять выделение</button>
+          {{#if hasProductGroups}}
+            <label class="sw-batch-target"><span>Назначить товарную группу</span><select data-batch-target-group>{{#each batchTargetGroupOptions}}<option value="{{id}}">{{name}}</option>{{/each}}</select></label>
+            <button type="button" class="sw-batch-apply" data-action="apply-batch-group"><i class="fa-solid fa-layer-group"></i> Применить группу</button>
+          {{/if}}
+          <label class="sw-batch-kind-target"><span>Перенести в раздел</span><select data-batch-target-kind><option value="product">Покупка</option><option value="service">Услуги</option></select></label>
+          <button type="button" class="sw-batch-move" data-action="move-selected-items"><i class="fa-solid fa-right-left"></i> Перенести выбранные</button>
+          <button type="button" class="sw-batch-delete danger" data-action="delete-selected-items"><i class="fa-solid fa-trash"></i> Удалить выбранные</button>
+        </div>
+      </details>
+
+      <div class="sw-editor-items">
+        {{#if hasProducts}}
+          <div class="sw-item-head" aria-hidden="true">
+            <span class="sw-item-head-spacer"></span>
+            <div class="sw-editor-item-main">Товар</div>
+            <div class="sw-item-classification">
+              <div class="sw-item-kind">Раздел</div>
+              <div class="sw-item-group">Товарная группа</div>
+              <div class="sw-item-quantity">Остаток</div>
+              <div class="sw-item-custom-price">Своя цена</div>
+            </div>
+            <span class="sw-item-head-action"></span>
+          </div>
+          {{#each products}}
+            <article class="sw-editor-item sw-editor-product-item {{#if missing}}is-missing{{/if}}" data-rarity="{{rarity}}" data-product-index="{{index}}" data-product-group="{{groupId}}" data-product-type="{{type}}">
+              <button type="button" class="sw-item-select" data-batch-item data-item-index="{{index}}" aria-pressed="false" aria-label="Отметить для массовых действий" title="Отметить для массовых действий"><i class="fa-solid fa-check"></i></button>
+              <img src="{{image}}" alt="{{name}}">
+              <div class="sw-editor-item-main">
+                <button type="button" class="sw-item-name" data-action="open-item" data-item-index="{{index}}" title="Открыть исходный предмет">
+                  <strong>{{name}}</strong><small>{{type}} · {{priceText}}</small>
+                  {{#if missing}}<small class="sw-missing-note"><i class="fa-solid fa-triangle-exclamation"></i> Ссылка на предмет не найдена</small>{{/if}}
+                </button>
+              </div>
+              <div class="sw-item-classification">
+                <label class="sw-item-kind"><span>Раздел</span><select name="items.{{index}}.kind">{{#each kindOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+                <label class="sw-item-group"><span>Товарная группа</span><select name="items.{{index}}.groupId">{{#each groupOptions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+                <label class="sw-item-quantity"><span>Остаток</span><input type="number" name="items.{{index}}.quantity" value="{{quantity}}" min="0" step="1" placeholder="∞"></label>
+                <label class="sw-item-custom-price"><span>Своя цена</span><input type="number" name="items.{{index}}.customPrice" value="{{customPrice}}" min="0" step="0.01" placeholder="авто"></label>
+              </div>
+              <button type="button" class="danger" data-action="remove-item" data-item-index="{{index}}" title="Удалить из магазина"><i class="fa-solid fa-xmark"></i></button>
+
+              <details class="sw-item-stock-overrides" {{#if overrideStockRules}}open{{/if}}>
+                <summary><i class="fa-solid fa-sliders"></i> Собственные правила остатка</summary>
+                <label class="sw-override-toggle"><input type="checkbox" name="items.{{index}}.overrideStockRules" {{#if overrideStockRules}}checked{{/if}}><span>Использовать личные формулы вместо правил товарной группы</span></label>
+                <div class="sw-item-stock-grid">
+                  <label><span>Пополнение</span><input type="text" name="items.{{index}}.restockFormula" value="{{restockFormula}}" placeholder="например 1d2"></label>
+                  <label><span>Списание</span><input type="text" name="items.{{index}}.depletionFormula" value="{{depletionFormula}}" placeholder="например 1d2-1"></label>
+                  <label><span>Максимум</span><input type="number" name="items.{{index}}.maxStock" value="{{maxStock}}" min="0" step="1" placeholder="без ограничения"></label>
+                </div>
+              </details>
+            </article>
+          {{/each}}
+        {{else}}
+          <div class="sw-empty compact"><p>Товаров ещё нет.</p></div>
+        {{/if}}
+      </div>
+    </section>
+
+    <section class="sw-editor-panel" data-editor-panel="services" {{#unless servicesActive}}hidden{{/unless}}>
+      <div class="sw-editor-sticky-tools">
+        <div class="sw-drop-zone" data-kind="service">
+          <i class="fa-solid fa-bell-concierge"></i><strong>Перетащите сюда услугу</strong><span>Деньги будут списаны, но исходный предмет не попадёт в инвентарь покупателя.</span>
+        </div>
+        <div class="sw-sort-controls sw-editor-sort-controls" aria-label="Сортировка услуг">
+          <label class="sw-sort-select"><i class="fa-solid fa-arrow-down-wide-short"></i><select data-editor-sort-key title="Сортировка услуг">{{#each sortOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+          <button type="button" data-action="toggle-editor-sort-direction" title="{{sortDirectionTitle}}" aria-label="{{sortDirectionTitle}}"><i class="fa-solid {{sortDirectionIcon}}"></i></button>
+        </div>
+      </div>
+
+      <details class="sw-batch-assignment" data-batch-panel data-batch-scope="services">
+        <summary><i class="fa-solid fa-list-check"></i> Массовые действия <span data-selection-count>0 выбрано</span></summary>
+        <div class="sw-batch-assignment-grid sw-batch-services-grid">
+          <button type="button" data-action="select-all-items"><i class="fa-solid fa-check-double"></i> Выделить все в разделе</button>
+          <button type="button" data-action="clear-item-selection"><i class="fa-solid fa-xmark"></i> Снять выделение</button>
+          <label class="sw-batch-kind-target"><span>Перенести в раздел</span><select data-batch-target-kind><option value="product">Покупка</option><option value="service" selected>Услуги</option></select></label>
+          <button type="button" class="sw-batch-move" data-action="move-selected-items"><i class="fa-solid fa-right-left"></i> Перенести выбранные</button>
+          <button type="button" class="sw-batch-delete danger" data-action="delete-selected-items"><i class="fa-solid fa-trash"></i> Удалить выбранные</button>
+        </div>
+      </details>
+
+      <div class="sw-editor-items">
+        {{#if hasServices}}
+          {{#each services}}
+            <article class="sw-editor-item sw-editor-service-item is-service {{#if missing}}is-missing{{/if}}" data-service-index="{{index}}" data-service-type="{{type}}">
+              <button type="button" class="sw-item-select" data-batch-item data-item-index="{{index}}" aria-pressed="false" aria-label="Отметить для массовых действий" title="Отметить для массовых действий"><i class="fa-solid fa-check"></i></button>
+              <img src="{{image}}" alt="{{name}}">
+              <div class="sw-editor-item-main">
+                <button type="button" class="sw-item-name" data-action="open-item" data-item-index="{{index}}" title="Открыть исходный предмет">
+                  <strong>{{name}}</strong><small>{{type}} · {{priceText}}</small>
+                  {{#if missing}}<small class="sw-missing-note"><i class="fa-solid fa-triangle-exclamation"></i> Ссылка на предмет не найдена</small>{{/if}}
+                </button>
+              </div>
+              <div class="sw-item-classification">
+                <label class="sw-item-kind"><span>Раздел</span><select name="items.{{index}}.kind">{{#each kindOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+                <label class="sw-item-quantity"><span>Остаток</span><input type="number" name="items.{{index}}.quantity" value="{{quantity}}" min="0" step="1" placeholder="∞"></label>
+                <label class="sw-item-custom-price"><span>Своя цена</span><input type="number" name="items.{{index}}.customPrice" value="{{customPrice}}" min="0" step="0.01" placeholder="авто"></label>
+              </div>
+              <button type="button" class="danger" data-action="remove-item" data-item-index="{{index}}" title="Удалить услугу"><i class="fa-solid fa-xmark"></i></button>
+            </article>
+          {{/each}}
+        {{else}}
+          <div class="sw-empty compact"><p>Услуг ещё нет.</p></div>
+        {{/if}}
+      </div>
+    </section>
+
+    <section class="sw-editor-panel sw-product-groups-panel" data-editor-panel="groups" {{#unless groupsActive}}hidden{{/unless}}>
+      <header class="sw-groups-toolbar">
+        <div><h3><i class="fa-solid fa-layer-group"></i> Товарные группы</h3><p>Группа задаёт наценку и изменение конечных остатков по игровому времени Foundry.</p></div>
+        <div class="sw-groups-actions">
+          <button type="button" data-action="restock-due" title="Обработать все накопившиеся периоды"><i class="fa-solid fa-clock-rotate-left"></i> Обновить просроченные</button>
+          <button type="button" data-action="restock-all-once" title="Применить один период ко всем группам"><i class="fa-solid fa-dice"></i> Один период всем</button>
+          <button type="button" data-action="add-product-group"><i class="fa-solid fa-plus"></i> Создать группу</button>
+        </div>
+      </header>
+
+      <div class="sw-groups-note"><i class="fa-solid fa-circle-info"></i><p>Обновляются только товары с заданным числом в поле «Остаток». Бесконечный запас и товары без группы не меняются. Для каждой товарной группы учитывается не более 100 накопившихся периодов: при большем скачке игрового времени остальные периоды пропускаются, а новый отсчёт начинается от текущего времени мира.</p></div>
+
+      <div class="sw-product-groups-list">
+        {{#if hasProductGroups}}
+          {{#each productGroups}}
+            <article class="sw-product-group-card {{#unless autoRestock}}is-disabled{{/unless}}">
+              <header>
+                <label class="sw-group-title"><span>Название группы</span><input type="text" name="productGroups.{{index}}.name" value="{{name}}"></label>
+                <div class="sw-group-meta">
+                  <span><i class="fa-solid fa-boxes-stacked"></i> Товаров: {{itemCount}}</span>
+                  <span class="{{#if duePeriods}}is-due{{/if}}"><i class="fa-solid fa-clock"></i> {{statusText}}</span>
+                  <button type="button" data-action="delete-product-group" data-group-index="{{index}}" class="danger" title="Удалить группу"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </header>
+
+              <div class="sw-group-rule">
+                <span class="sw-rule-part"><b>каждые</b>
+                  <input class="sw-rule-interval" type="number" name="productGroups.{{index}}.intervalValue" value="{{intervalValue}}" min="1" step="1">
+                  <select class="sw-rule-unit" name="productGroups.{{index}}.intervalUnit">{{#each intervalUnitOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></span>
+                <span class="sw-rule-part"><b>пополнение</b><span class="sw-sign-plus">+</span>
+                  <input class="sw-rule-formula" type="text" name="productGroups.{{index}}.restockFormula" value="{{restockFormula}}" placeholder="2d20" title="Формула пополнения за период"></span>
+                <span class="sw-rule-part"><b>списание</b><span class="sw-sign-minus">&minus;</span>
+                  <input class="sw-rule-formula" type="text" name="productGroups.{{index}}.depletionFormula" value="{{depletionFormula}}" placeholder="1d10" title="Формула списания за период"></span>
+                <span class="sw-rule-part"><b>не больше</b>
+                  <input class="sw-rule-max" type="number" name="productGroups.{{index}}.maxStock" value="{{maxStock}}" min="0" step="1" placeholder="∞" title="Максимальный остаток"></span>
+                <span class="sw-rule-part"><b>наценка</b><span class="sw-sign-mul">×</span>
+                  <input class="sw-rule-mult" type="number" name="productGroups.{{index}}.priceMultiplier" value="{{priceMultiplier}}" min="0.01" step="0.01" title="Наценка группы"></span>
+              </div>
+
+              <footer>
+                <label class="sw-group-auto"><input type="checkbox" name="productGroups.{{index}}.autoRestock" {{#if autoRestock}}checked{{/if}}><span>Ленивое автообновление при открытии магазина</span></label>
+                <span class="sw-group-effective" title="Общая наценка магазина, умноженная на наценку группы">итоговая цена ×{{effectiveMultiplier}}</span>
+                <button type="button" data-action="restock-group-once" data-group-index="{{index}}"><i class="fa-solid fa-dice-d20"></i> Применить 1 период</button>
+              </footer>
+            </article>
+          {{/each}}
+        {{else}}
+          <div class="sw-empty"><i class="fa-solid fa-layer-group"></i><p>Товарных групп ещё нет. Создайте первую группу и назначьте её товарам во вкладке «Покупка».</p></div>
+        {{/if}}
+      </div>
+    </section>
+
+    <section class="sw-editor-panel sw-sales-settings" data-editor-panel="sales" {{#unless salesActive}}hidden{{/unless}}>
+      <header><i class="fa-solid fa-hand-holding-dollar"></i><div><h3>Скупка предметов</h3><p>Настройки того, что происходит, когда персонаж продаёт предмет магазину.</p></div></header>
+      <div class="sw-sales-settings-grid">
+        <label class="sw-setting-card sw-setting-toggle"><input type="checkbox" name="salesEnabled" {{#if salesEnabled}}checked{{/if}}><span><strong>Магазин скупает предметы</strong><small>Если выключено, игроки увидят во вкладке продажи сообщение, что скупка недоступна.</small></span></label>
+        <label class="sw-setting-card sw-buyback-setting"><span><strong>Цена скупки</strong><small>Процент от базовой цены предмета в его листе.</small></span><div><input type="number" name="buybackPercent" value="{{buybackPercent}}" min="0" step="1"><strong>%</strong></div></label>
+        <label class="sw-setting-card sw-setting-toggle"><input type="checkbox" name="restockSoldItems" {{#if restockSoldItems}}checked{{/if}}><span><strong>Возвращать проданные товары в ассортимент</strong><small>Работает для предметов, у которых сохранилась ссылка на исходный документ.</small></span></label>
+      </div>
+
+      <section class="sw-wallet-settings">
+        <header><i class="fa-solid fa-wallet"></i><div><h3>Кошелёк торговца</h3><p>Ограничивает сумму, которую магазин может выплатить персонажам.</p></div><strong class="sw-purse">{{#each walletBalanceParts}}<span class="sw-coin"><b>{{amount}}</b><i class="sw-d-{{denom}}">{{label}}</i></span>{{/each}}{{#unless walletBalanceParts.length}}<span class="sw-coin sw-coin-empty">монет нет</span>{{/unless}}</strong></header>
+        <div class="sw-wallet-settings-grid">
+          <label class="sw-setting-card sw-setting-toggle"><input type="checkbox" name="walletEnabled" {{#if walletEnabled}}checked{{/if}}><span><strong>Использовать собственный кошелёк</strong><small>Если выключено, магазин скупает предметы без ограничения по средствам.</small></span></label>
+          <label class="sw-setting-card sw-setting-toggle"><input type="checkbox" name="walletReceivesPayments" {{#if walletReceivesPayments}}checked{{/if}}><span><strong>Пополнять от покупок и услуг</strong><small>Чистая стоимость оплаченной операции поступает в кошелёк магазина.</small></span></label>
+        </div>
+        <div class="sw-wallet-currencies">
+          {{#each walletCurrencies}}
+            <label><span>{{label}}</span><input type="number" name="wallet.{{key}}" value="{{value}}" min="0" step="1"></label>
+          {{/each}}
+        </div>
+        <p class="sw-wallet-hint"><i class="fa-solid fa-circle-info"></i> Используются только валюты, разрешённые в общих настройках торговли. Сдача покупателю не уменьшает доход магазина: зачисляется точная стоимость товара или услуги.</p>
+      </section>
+
+      <div class="sw-sales-note"><i class="fa-solid fa-circle-info"></i><p>Заклинания, особенности, классы, предыстории и предметы без цены не предлагаются для продажи. Контейнер с содержимым также нельзя продать, пока он не опустеет.</p></div>
+    </section>
+    </div>
+  </section>
+
+  <footer class="sw-form-footer"><button type="submit" data-action="save"><i class="fa-solid fa-floppy-disk"></i> Сохранить</button></footer>
+</form>
+{{/if}}
