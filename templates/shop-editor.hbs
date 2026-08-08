@@ -175,13 +175,13 @@
       <header class="sw-groups-toolbar">
         <div><h3><i class="fa-solid fa-layer-group"></i> Товарные группы</h3><p>Группа задаёт наценку и изменение конечных остатков по игровому времени Foundry.</p></div>
         <div class="sw-groups-actions">
-          <button type="button" data-action="restock-due" title="Обработать все накопившиеся периоды"><i class="fa-solid fa-clock-rotate-left"></i> Обновить просроченные</button>
+          <button type="button" data-action="restock-due" title="Применить один цикл всем просроченным группам"><i class="fa-solid fa-clock-rotate-left"></i> Обновить просроченные</button>
           <button type="button" data-action="restock-all-once" title="Применить один период ко всем группам"><i class="fa-solid fa-dice"></i> Один период всем</button>
           <button type="button" data-action="add-product-group"><i class="fa-solid fa-plus"></i> Создать группу</button>
         </div>
       </header>
 
-      <div class="sw-groups-note"><i class="fa-solid fa-circle-info"></i><p>Обновляются только товары с заданным числом в поле «Остаток». Бесконечный запас и товары без группы не меняются. Для каждой товарной группы учитывается не более 100 накопившихся периодов: при большем скачке игрового времени остальные периоды пропускаются, а новый отсчёт начинается от текущего времени мира.</p></div>
+      <div class="sw-groups-note"><i class="fa-solid fa-circle-info"></i><p>Обновляются только товары с заданным числом в поле «Остаток». Бесконечный запас и товары без группы не меняются. Если с прошлого обновления прошло один или несколько периодов, применяется ровно один цикл, после чего новый отсчёт начинается от текущего времени мира.</p></div>
 
       <div class="sw-product-groups-list">
         {{#if hasProductGroups}}

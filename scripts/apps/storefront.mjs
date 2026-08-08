@@ -1,6 +1,7 @@
 import { MODULE_ID, SETTINGS } from "../constants.mjs";
 import { Compat } from "../compat.mjs";
 import { ShopStore } from "../storage.mjs";
+import { RestockService } from "../restock.mjs";
 import { PurchaseService } from "../purchase.mjs";
 import { BuyerPickerApp } from "./buyer-picker.mjs";
 import { ItemPreviewApp } from "./item-preview.mjs";
@@ -54,9 +55,12 @@ export class StorefrontApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.sortDirection = "asc";
     this.restockCheckedAt = null;
     this.restockCheckPromise = null;
+    this.performanceLogged = false;
 
     this.stockHook = Hooks.on(`${MODULE_ID}.stockChanged`, changedShopId => {
-      if (changedShopId === this.shopId && this.rendered) this.render({ force: true });
+      if (changedShopId !== this.shopId || !this.rendered) return;
+      this.restockCheckedAt = null;
+      this.render({ force: true });
     });
 
     this.actorHook = Hooks.on("updateActor", actor => {
@@ -96,10 +100,17 @@ export class StorefrontApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   };
 
-  async _ensureRestockChecked() {
+  async _ensureRestockChecked(shop = null) {
     const worldTime = Number(game.time?.worldTime) || 0;
-    if (this.restockCheckedAt === worldTime) return;
+    if (this.restockCheckedAt === worldTime) return { ok: true, changed: false, cached: true };
     if (this.restockCheckPromise) return this.restockCheckPromise;
+
+    const currentShop = shop ?? ShopStore.get(this.shopId);
+    if (!currentShop || !RestockService.hasDueRestock(currentShop, worldTime)) {
+      this.restockCheckedAt = worldTime;
+      return { ok: true, changed: false, skipped: true };
+    }
+
     this.restockCheckedAt = worldTime;
     this.restockCheckPromise = PurchaseService.requestRestock({ shopId: this.shopId })
       .then(result => {
@@ -124,12 +135,49 @@ export class StorefrontApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   async _prepareContext(options) {
+    const performanceStart = performance.now();
+    const timings = {};
     const context = await super._prepareContext(options);
-    await this._ensureRestockChecked();
-    const shop = ShopStore.get(this.shopId);
+
+    let started = performance.now();
+    let shop = ShopStore.get(this.shopId);
+    timings.shopLookupMs = performance.now() - started;
+    if (!shop) {
+      if (!this.performanceLogged) {
+        this.performanceLogged = true;
+        console.info(`${MODULE_ID} | Подготовка витрины`, { shopId: this.shopId, missing: true, totalMs: Math.round((performance.now() - performanceStart) * 10) / 10 });
+      }
+      return { ...context, missing: true };
+    }
+
+    started = performance.now();
+    const restockResult = await this._ensureRestockChecked(shop);
+    timings.restockMs = performance.now() - started;
+    timings.restockSkipped = restockResult?.skipped === true || restockResult?.cached === true;
+
+    // Ресток мог изменить остатки и revision, поэтому после него берём свежую
+    // версию только этого магазина из быстрого индекса ShopStore.
+    shop = ShopStore.get(this.shopId);
     if (!shop) return { ...context, missing: true };
 
-    const buyerActor = await this._resolveBuyer();
+    let buyerResolveMs = 0;
+    let itemResolveMs = 0;
+    const buyerPromise = (async () => {
+      const at = performance.now();
+      const actor = await this._resolveBuyer();
+      buyerResolveMs = performance.now() - at;
+      return actor;
+    })();
+    const itemPromise = (async () => {
+      const at = performance.now();
+      const documents = await Compat.resolveUuids(shop.items.map(entry => entry.uuid), { documentName: "Item" });
+      itemResolveMs = performance.now() - at;
+      return documents;
+    })();
+    const [buyerActor, resolvedItems] = await Promise.all([buyerPromise, itemPromise]);
+    timings.buyerResolveMs = buyerResolveMs;
+    timings.itemResolveMs = itemResolveMs;
+
     const buyer = buyerActor ? {
       uuid: buyerActor.uuid,
       name: buyerActor.name,
@@ -142,7 +190,7 @@ export class StorefrontApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const items = [];
     for (let index = 0; index < shop.items.length; index += 1) {
       const entry = shop.items[index];
-      const document = await Compat.fromUuid(entry.uuid);
+      const document = resolvedItems.get(entry.uuid) ?? null;
       const kind = entry.kind === "service" ? "service" : "product";
       const isService = kind === "service";
       if (!document) {
@@ -289,7 +337,7 @@ export class StorefrontApp extends HandlebarsApplicationMixin(ApplicationV2) {
       : [];
     const sortedSales = sortShopItems(sales, this.sortKey, this.sortDirection);
 
-    return {
+    const prepared = {
       ...context,
       shop,
       buyer,
@@ -322,6 +370,18 @@ export class StorefrontApp extends HandlebarsApplicationMixin(ApplicationV2) {
       walletBalanceParts: Compat.formatWalletParts(shop.wallet),
       isGM: game.user.isGM
     };
+
+    if (!this.performanceLogged) {
+      this.performanceLogged = true;
+      timings.totalMs = performance.now() - performanceStart;
+      const rounded = Object.fromEntries(Object.entries(timings).map(([key, value]) => [
+        key,
+        typeof value === "number" ? Math.round(value * 10) / 10 : value
+      ]));
+      console.info(`${MODULE_ID} | Подготовка витрины «${shop.name}»`, rounded);
+    }
+
+    return prepared;
   }
 
   _switchTab(tab) {

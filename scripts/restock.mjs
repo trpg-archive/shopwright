@@ -2,8 +2,6 @@ import { MODULE_ID } from "./constants.mjs";
 import { Compat } from "./compat.mjs";
 import { ShopStore } from "./storage.mjs";
 
-export const MAX_ACCUMULATED_RESTOCK_PERIODS = 100;
-
 const UNIT_SECONDS = Object.freeze({
   hour: 3600,
   day: 86400,
@@ -53,10 +51,6 @@ export class RestockService {
     return currentWorldTime();
   }
 
-  static get maxAccumulatedPeriods() {
-    return MAX_ACCUMULATED_RESTOCK_PERIODS;
-  }
-
   static intervalSeconds(group) {
     return groupIntervalSeconds(group);
   }
@@ -68,6 +62,10 @@ export class RestockService {
     const elapsed = atTime - last;
     if (elapsed <= 0) return 0;
     return Math.max(0, Math.floor(elapsed / groupIntervalSeconds(group)));
+  }
+
+  static hasDueRestock(shop, atTime = currentWorldTime()) {
+    return (shop?.productGroups ?? []).some(group => this.duePeriods(group, atTime) > 0);
   }
 
   static formatDuration(seconds) {
@@ -91,14 +89,11 @@ export class RestockService {
     return {
       due,
       remaining,
-      limited: due > MAX_ACCUMULATED_RESTOCK_PERIODS,
       text: group?.autoRestock === false
         ? "Автообновление выключено"
-        : due > MAX_ACCUMULATED_RESTOCK_PERIODS
-          ? `Накоплено периодов: ${due} · будет применено ${MAX_ACCUMULATED_RESTOCK_PERIODS}`
-          : due > 0
-            ? `Накоплено периодов: ${due}`
-            : `До обновления: ${this.formatDuration(remaining)}`
+        : due > 0
+          ? "Требуется обновление"
+          : `До обновления: ${this.formatDuration(remaining)}`
     };
   }
 
@@ -116,18 +111,16 @@ export class RestockService {
     for (const group of groups) {
       if (groupId && group.id !== groupId) continue;
 
-      const interval = groupIntervalSeconds(group);
-      let requestedPeriods;
-      if (forcePeriods != null) requestedPeriods = Math.max(0, finiteInteger(forcePeriods, 0));
-      else requestedPeriods = this.duePeriods(group, now);
-      const limited = requestedPeriods > MAX_ACCUMULATED_RESTOCK_PERIODS;
-      const periods = Math.min(requestedPeriods, MAX_ACCUMULATED_RESTOCK_PERIODS);
-
+      const requestedPeriods = forcePeriods != null
+        ? Math.max(0, finiteInteger(forcePeriods, 0))
+        : this.duePeriods(group, now);
+      const periods = requestedPeriods > 0 ? 1 : 0;
       const last = Number(group.lastUpdateTime);
+
       if (Number.isFinite(last) && now < last) {
         group.lastUpdateTime = now;
         changed = true;
-        results.push({ groupId: group.id, groupName: group.name, requestedPeriods, periods: 0, changedItems: 0, reset: true, limited });
+        results.push({ groupId: group.id, groupName: group.name, requestedPeriods, periods: 0, changedItems: 0, reset: true });
         continue;
       }
 
@@ -144,23 +137,21 @@ export class RestockService {
       const itemChanges = [];
 
       try {
-        for (let period = 0; period < periods; period += 1) {
-          for (let index = 0; index < candidateItems.length; index += 1) {
-            const entry = candidateItems[index];
-            if (entry.kind === "service" || entry.groupId !== group.id || entry.quantity == null) continue;
+        for (let index = 0; index < candidateItems.length; index += 1) {
+          const entry = candidateItems[index];
+          if (entry.kind === "service" || entry.groupId !== group.id || entry.quantity == null) continue;
 
-            const before = Math.max(0, finiteInteger(entry.quantity, 0));
-            const added = await evaluateQuantity(stockFormula(entry, group, "restockFormula"));
-            const removed = await evaluateQuantity(stockFormula(entry, group, "depletionFormula"));
-            const maximum = stockMaximum(entry, group);
-            let after = Math.max(0, before + added - removed);
-            if (maximum != null) after = Math.min(maximum, after);
-            entry.quantity = after;
+          const before = Math.max(0, finiteInteger(entry.quantity, 0));
+          const added = await evaluateQuantity(stockFormula(entry, group, "restockFormula"));
+          const removed = await evaluateQuantity(stockFormula(entry, group, "depletionFormula"));
+          const maximum = stockMaximum(entry, group);
+          let after = Math.max(0, before + added - removed);
+          if (maximum != null) after = Math.min(maximum, after);
+          entry.quantity = after;
 
-            if (after !== before) {
-              changedItemIndexes.add(index);
-              itemChanges.push({ index, before, after, added, removed, period: period + 1 });
-            }
+          if (after !== before) {
+            changedItemIndexes.add(index);
+            itemChanges.push({ index, before, after, added, removed, period: 1 });
           }
         }
       } catch (error) {
@@ -171,16 +162,15 @@ export class RestockService {
           requestedPeriods,
           periods,
           changedItems: 0,
-          limited,
           error: String(error?.message ?? error)
         });
         continue;
       }
 
       items.splice(0, items.length, ...candidateItems);
-      group.lastUpdateTime = resetTimer || forcePeriods != null || limited
-        ? now
-        : (Number.isFinite(last) ? last : now) + periods * interval;
+      // Любой просроченный промежуток сворачивается в один цикл, после чего
+      // новый отсчёт начинается от текущего игрового времени.
+      group.lastUpdateTime = now;
       changed = true;
       results.push({
         groupId: group.id,
@@ -189,7 +179,7 @@ export class RestockService {
         periods,
         changedItems: changedItemIndexes.size,
         itemChanges,
-        limited
+        resetTimer: resetTimer === true
       });
     }
 
@@ -204,8 +194,7 @@ export class RestockService {
       results,
       errorCount: results.filter(result => result.error).length,
       periodCount: results.reduce((sum, result) => sum + (result.error ? 0 : (result.periods || 0)), 0),
-      changedItems: results.reduce((sum, result) => sum + (result.changedItems || 0), 0),
-      limitedGroupCount: results.filter(result => result.limited && !result.error).length
+      changedItems: results.reduce((sum, result) => sum + (result.changedItems || 0), 0)
     };
   }
 }

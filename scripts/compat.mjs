@@ -211,6 +211,82 @@ export const Compat = {
     return foundry.utils.fromUuid(uuid);
   },
 
+  async resolveUuids(uuids, { documentName = null } = {}) {
+    const unique = [...new Set((Array.isArray(uuids) ? uuids : [])
+      .map(uuid => String(uuid ?? "").trim())
+      .filter(Boolean))];
+    const resolved = new Map(unique.map(uuid => [uuid, null]));
+    if (!unique.length) return resolved;
+
+    const packGroups = new Map();
+    const fallback = new Set();
+
+    for (const uuid of unique) {
+      let parsed = null;
+      try {
+        parsed = foundry.utils.parseUuid(uuid);
+      } catch {
+        fallback.add(uuid);
+        continue;
+      }
+
+      const collection = parsed?.collection ?? null;
+      const id = String(parsed?.id ?? parsed?.documentId ?? "").trim();
+      const type = String(parsed?.type ?? parsed?.documentType ?? collection?.documentName ?? "");
+      const embedded = Array.isArray(parsed?.embedded) ? parsed.embedded : [];
+      const typeMatches = !documentName || !type || type === documentName;
+
+      if (!id || embedded.length || !typeMatches) {
+        fallback.add(uuid);
+        continue;
+      }
+
+      if (collection === game.items) {
+        resolved.set(uuid, game.items.get(id) ?? null);
+        continue;
+      }
+
+      if (uuid.startsWith("Compendium.") && typeof collection?.getDocuments === "function") {
+        let byId = packGroups.get(collection);
+        if (!byId) {
+          byId = new Map();
+          packGroups.set(collection, byId);
+        }
+        const refs = byId.get(id) ?? [];
+        refs.push(uuid);
+        byId.set(id, refs);
+        continue;
+      }
+
+      fallback.add(uuid);
+    }
+
+    await Promise.all([...packGroups.entries()].map(async ([pack, byId]) => {
+      try {
+        const documents = await pack.getDocuments({ _id__in: [...byId.keys()] });
+        const byDocumentId = new Map(documents.map(document => [document.id, document]));
+        for (const [id, refs] of byId) {
+          const document = byDocumentId.get(id) ?? null;
+          for (const uuid of refs) resolved.set(uuid, document);
+        }
+      } catch (error) {
+        console.warn(`${MODULE_ID} | Не удалось пакетно загрузить документы из ${pack.collection ?? "Compendium"}`, error);
+        for (const refs of byId.values()) for (const uuid of refs) fallback.add(uuid);
+      }
+    }));
+
+    await Promise.all([...fallback].map(async uuid => {
+      try {
+        resolved.set(uuid, await foundry.utils.fromUuid(uuid));
+      } catch (error) {
+        console.warn(`${MODULE_ID} | Не удалось получить документ ${uuid}`, error);
+        resolved.set(uuid, null);
+      }
+    }));
+
+    return resolved;
+  },
+
   renderSheet(document) {
     const sheet = document?.sheet;
     if (!sheet) return;

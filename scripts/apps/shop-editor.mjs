@@ -92,10 +92,7 @@ function reportRestock(result, forced = false) {
     ui.notifications.info("Для выбранных товарных групп ещё не наступил срок обновления.");
     return;
   }
-  const limitNote = result.limitedGroupCount
-    ? ` Для групп с большим пропуском применено не более ${RestockService.maxAccumulatedPeriods} периодов.`
-    : "";
-  ui.notifications.info(`${forced ? "Ручное обновление" : "Обновление ассортимента"}: периодов ${result.periodCount}, изменённых позиций ${result.changedItems}.${limitNote}`);
+  ui.notifications.info(`${forced ? "Ручное обновление" : "Обновление ассортимента"}: циклов ${result.periodCount}, изменённых позиций ${result.changedItems}.`);
 }
 
 export class ShopEditorApp extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -252,10 +249,11 @@ export class ShopEditorApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ...(shop.productGroups ?? []).map(group => ({ id: group.id, name: group.name }))
     ];
 
+    const resolvedItems = await Compat.resolveUuids(shop.items.map(entry => entry.uuid), { documentName: "Item" });
     const items = [];
     for (let index = 0; index < shop.items.length; index += 1) {
       const entry = shop.items[index];
-      const document = await Compat.fromUuid(entry.uuid);
+      const document = resolvedItems.get(entry.uuid) ?? null;
       const calculated = document ? Compat.calculateShopPrice(shop, entry, document) : 0;
       const denomination = document ? Compat.getItemCurrency(document) : "gp";
       const kind = entry.kind === "service" ? "service" : "product";

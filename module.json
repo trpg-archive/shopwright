@@ -2,7 +2,7 @@
   "id": "shopwright",
   "title": "Shopwright",
   "description": "Лёгкие магазины для Foundry VTT: кошелёк торговца, категории, товарные группы, формульное пополнение, товары и услуги из компендиумов, покупки, продажи, история, токены-витрины и резервные копии. Модуль полностью разработан с помощью ИИ.",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "authors": [
     {
       "name": "SnowKorshun",
@@ -11,7 +11,7 @@
   ],
   "url": "https://github.com/trpg-archive/shopwright",
   "manifest": "https://github.com/trpg-archive/shopwright/releases/latest/download/module.json",
-  "download": "https://github.com/trpg-archive/shopwright/releases/download/v1.0.7/shopwright-v1.0.7.zip",
+  "download": "https://github.com/trpg-archive/shopwright/releases/download/v1.0.8/shopwright-v1.0.8.zip",
   "compatibility": {
     "minimum": "13",
     "verified": "14",

@@ -4,6 +4,23 @@ import { Compat } from "./compat.mjs";
 
 const HISTORY_LIMIT = 1000;
 
+let shopStateCacheRaw = null;
+let shopStateCache = null;
+let shopStateIndex = new Map();
+
+function cacheShopState(raw, state) {
+  shopStateCacheRaw = raw;
+  shopStateCache = state;
+  shopStateIndex = new Map(state.shops.map(shop => [shop.id, shop]));
+  return state;
+}
+
+function invalidateShopStateCache() {
+  shopStateCacheRaw = null;
+  shopStateCache = null;
+  shopStateIndex = new Map();
+}
+
 function now() {
   return Date.now();
 }
@@ -161,13 +178,15 @@ function normalizeShopState(value) {
 }
 
 function readShopState() {
-  const raw = game.settings.get(MODULE_ID, SETTINGS.SHOPS);
+  const raw = String(game.settings.get(MODULE_ID, SETTINGS.SHOPS) ?? "");
+  if (shopStateCache && raw === shopStateCacheRaw) return shopStateCache;
+
   try {
-    return normalizeShopState(JSON.parse(raw || "[]"));
+    return cacheShopState(raw, normalizeShopState(JSON.parse(raw || "[]")));
   } catch (error) {
     console.error(`${MODULE_ID} | Не удалось прочитать магазины`, error);
     ui.notifications.error("Shopwright: повреждены данные магазинов. Подробности в консоли.");
-    return normalizeShopState([]);
+    return cacheShopState(raw, normalizeShopState([]));
   }
 }
 
@@ -179,7 +198,8 @@ export class ShopStore {
       scope: "world",
       config: false,
       type: String,
-      default: "[]"
+      default: "[]",
+      onChange: () => invalidateShopStateCache()
     });
 
     game.settings.register(MODULE_ID, SETTINGS.CATEGORIES, {
@@ -264,12 +284,18 @@ export class ShopStore {
     });
   }
 
+  static invalidateCache() {
+    invalidateShopStateCache();
+  }
+
   static getAll() {
-    return readShopState().shops;
+    return readShopState().shops.map(shop => Compat.clone(shop));
   }
 
   static get(id) {
-    return this.getAll().find(shop => shop.id === id) ?? null;
+    readShopState();
+    const shop = shopStateIndex.get(String(id ?? ""));
+    return shop ? Compat.clone(shop) : null;
   }
 
   static async ensureStableItemIds() {
@@ -316,10 +342,11 @@ export class ShopStore {
       shops: normalized
     };
     await game.settings.set(MODULE_ID, SETTINGS.SHOPS, JSON.stringify(next));
+    invalidateShopStateCache();
 
     const stored = readShopState();
     if (stored.writeId && stored.writeId !== writeId) throw new Error("STORE_CONFLICT");
-    return stored.shops;
+    return stored.shops.map(shop => Compat.clone(shop));
   }
 
   static async create(data = {}) {
